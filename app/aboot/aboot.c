@@ -582,7 +582,7 @@ void aboot_init(const struct app_descriptor *app)
 	int ret;
 
 	printf("press any key to enter boot menu...\n");
-	ret = keys_wait_event_timeout(&code, &value, 5000);
+	ret = keys_wait_event_timeout(&code, &value, 2500);
 	if (ret) {
 		printf("no user choice, defaulting to nand boot\n");
 		boot_nand();
