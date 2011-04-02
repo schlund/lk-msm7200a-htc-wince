@@ -477,8 +477,8 @@ static void htckovsky_usb_init(void) {
  *****************************************************************************/
 static struct gpio_key htckovsky_gpio_keys[] = {
 	{KOVS100_POWER_KEY, KEY_POWER, true, "Power"},
-	{KOVS100_CAM_FULL_KEY, KEY_UP, true, "Camera full press"},
-	{KOVS100_CAM_HALF_KEY, KEY_DOWN, true, "Camera half press"},
+	{KOVS100_CAM_FULL_KEY, KEY_DOWN, true, "Camera full press"},
+	{KOVS100_CAM_HALF_KEY, KEY_UP, true, "Camera half press"},
 };
 
 static struct gpio_keys_pdata htckovsky_gpio_keys_pdata = {
@@ -590,7 +590,8 @@ static void htckovsky_init(void) {
 	mdelay(10);
 	htckovsky_set_color_leds(1, 0, 1);
 	mdelay(20);
-	clk_set_rate(MDP_CLK, 192 * 1000 * 1000);
+	//set half rate to reduce flicker
+	clk_set_rate(MDP_CLK, 109 * 1000 * 1000);
 	htckovsky_usb_init();
 	htckovsky_nand_init();
 	htckovsky_gpio_keys_init();
@@ -605,6 +606,6 @@ struct msm7k_board htckovsky_board = {
 	.early_init = htckovsky_early_init,
 	.init = htckovsky_init,
 	.exit = htckovsky_exit,
-	.cmdline = "fbcon=rotate:2 init=/init physkeyboard=kovsq force_cdma=0"
-	" hwrotation=180 lcd.density=240",
+	.cmdline = "fbcon=rotate:2 init=/init physkeyboard=kovsq"
+	" force_cdma=0 hwrotation=180 lcd.density=240",
 };
