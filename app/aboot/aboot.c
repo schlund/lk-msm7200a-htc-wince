@@ -531,11 +531,6 @@ static void handle_keypad(void) {
 	int16_t value = 0;
 	int16_t last_value = -1;
 
-	printf("press any key to enter boot menu...\n");
-	ret = keys_wait_event_timeout(&last_code, &value, 5000);
-	if (ret)
-		return;
-
 	menu_update(MENU_REDRAW);
 	while (!(ret = keys_wait_event_timeout(&code, &value, 0))) {
 		//do not handle both release and keypress
@@ -554,14 +549,15 @@ static void handle_keypad(void) {
 
 			case KEY_DOWN:
 			case KEY_VOLUMEDOWN:
-				if(menu_update(MENU_DOWN));
+				menu_update(MENU_DOWN);
 					return;
 				//printf("Key down\n");
 				break;
 
 			case KEY_ENTER:
 			case KEY_POWER:
-				menu_update(MENU_SELECT);
+				if menu_update(MENU_SELECT);
+					return;
 				//printf("Key enter\n");
 				break;
 
@@ -587,12 +583,23 @@ void aboot_init(const struct app_descriptor *app)
 			break;
 	}
 
+	uint16_t code = 0;
+	int16_t value = 0;
+	int ret;
+
+	printf("press any key to enter boot menu...\n");
+	ret = keys_wait_event_timeout(&code, &value, 5000);
+	if (ret) {
+		printf("no user choice, defaulting to nand boot\n");
+		goto skip_keypad;
+	}
+
 	handle_keypad();
-	printf("no user choice, defaulting to nand boot\n");
+
+skip_keypad:
 	if (is_usb_connected())
 		goto fastboot;
 
-skip_keypad:
 	boot_nand();
 
 fastboot:
