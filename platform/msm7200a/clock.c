@@ -16,9 +16,10 @@
 
 #include <stdio.h>
 #include <kernel/mutex.h>
+#include <platform/acpuclock.h>
 #include <platform/clock.h>
 #include <platform/iomap.h>
-#include <platform/acpuclock.h>
+#include <platform/timer.h>
 #include <reg.h>
 
 static mutex_t clk_mutex;
@@ -51,10 +52,36 @@ struct msm_clock_params {
 	.calc_freq = (pll_frequency*M/((PRE+1)*N)), \
 }
 
+#define MSM_GLBL_CLK_STATE      ( MSM_CLK_CTL_BASE+0x4 )
+#define MSM_CAM_MD_REG          ( MSM_CLK_CTL_BASE+0x40 )
+#define MSM_VFE_NS_REG          ( MSM_CLK_CTL_BASE+0x44 )
+#define MSM_PRPH_WEB_NS_REG     ( MSM_CLK_CTL_BASE+0x80 )
+#define MSM_GRP_NS_REG          ( MSM_CLK_CTL_BASE+0x84 )
+#define MSM_CLK_HALT_STATEA     ( MSM_CLK_CTL_BASE+0x108 )
+#define MSM_CLK_HALT_STATEB     ( MSM_CLK_CTL_BASE+0x108 )
+#define MSM_AXI_RESET           ( MSM_CLK_CTL_BASE+0x208 )
+#define MSM_APPS_RESET          ( MSM_CLK_CTL_BASE+0x210 )
+#define MSM_ROW_RESET           ( MSM_CLK_CTL_BASE+0x214 )
+#define MSM_VDD_VFE_GFS_CTL     ( MSM_CLK_CTL_BASE+0x280 )
+#define MSM_VDD_GRP_GFS_CTL     ( MSM_CLK_CTL_BASE+0x284 )
+#define MSM_VDD_VDC_GFS_CTL     ( MSM_CLK_CTL_BASE+0x288 )
+#define MSM_RAIL_CLAMP_IO       ( MSM_CLK_CTL_BASE+0x290 )
+
+#define REG_OR( reg, value ) do { uint32_t i = readl( (reg) ); writel( i | (value), (reg) ); } while(0)
+#define REG_AND( reg, value ) do {	uint32_t i = readl( reg ); writel( i & ~value, reg); } while(0)
+#define REG_AND_MASK( reg, value ) do {	uint32_t i = readl( reg ); writel( i & value, reg); } while(0)
+#define REG_AND_OR( reg, value_and, value_or ) do { uint32_t i = readl( reg ); writel( (i & ~(value_and)) | (value_or), reg); } while(0)
+#define REG_ANDM_OR( reg, value_and, value_or ) do { uint32_t i = readl( reg ); writel( (i & (value_and)) | (value_or), reg); } while(0)
+#define REG_AND_ADD( reg, value_and, value_add ) do { uint32_t i = readl( reg ); writel( (i & ~(value_and)) + (value_add), reg); } while(0)
+#define REG_SET( reg, value ) do { writel( value, reg ); } while(0)
+
 static struct msm_clock_params msm_clock_parameters[NR_CLKS] = {
 	[ADSP_CLK] = {.offset = 0x34,.name = "ADSP_CLK",},
 	[GP_CLK] = {.offset = 0x5c,.name = "GP_CLK",},
+	[GRP_CLK] = {.idx = 3,.name = "GRP_CLK",},
+	[IMEM_CLK] = {.idx = 3,.name = "IMEM_CLK",},
 	[I2C_CLK] = {.offset = 0x68,.setup_mdns = 1,.name = "I2C_CLK",},
+	[MDC_CLK] = {.offset = 0x7c,.name = "MDC_CLK",},
 	[MDP_CLK] = { .offset = 0x8c, .name = "MDP_CLK",},
 	[PMDH_CLK] = {.offset = 0x8c,.setup_mdns = 0,.name = "PMDH_CLK",},
 	[SDAC_CLK] = {.offset = 0x9c,.name = "SDAC_CLK",},
@@ -75,25 +102,27 @@ static struct msm_clock_params msm_clock_parameters[NR_CLKS] = {
 			 "UART2DM_CLK",},
 	[USB_HS_CLK] = {.offset = 0x2c0,.name = "USB_HS_CLK",},
 	[USB_HS_PCLK] = {.idx = 25,.name = "USB_HS_PCLK",},
+	[VFE_CLK] = {.offset = 0x44,.setup_mdns = 1,.name = "VFE_CLK",},
+	[VFE_MDC_CLK] = {.offset = 0x44,.name = "VFE_MDC_CLK",},
+	[VDC_CLK] = {.offset = 0xf0,.name = "VDC_CLK",},
 };
 
 static struct mdns_clock_params msm_clock_freq_parameters_pll0_245[] = {
-
 	MSM_CLOCK_REG(144000, 3, 0x64, 0x32, 3, 3, 0, 1, 19200000),	/* SD, 144kHz */
 	MSM_CLOCK_REG(7372800, 3, 0x64, 0x32, 0, 2, 4, 1, 245760000),	/*  460800*16, will be divided by 4 for 115200 */
 	MSM_CLOCK_REG(12000000, 1, 0x20, 0x10, 1, 3, 1, 1, 768000000),	/* SD, 12MHz */
 	MSM_CLOCK_REG(14745600, 3, 0x32, 0x19, 0, 2, 4, 1, 245760000),	/* BT, 921600 (*16) */
-	MSM_CLOCK_REG(19200000, 1, 0x0a, 0x05, 3, 3, 1, 1, 768000000),	/* SD, 19.2MHz */
-	MSM_CLOCK_REG(24000000, 1, 0x8, 0x04, 3, 2, 1, 1, 768000000),	/* SD, 24MHz */
-	MSM_CLOCK_REG(32000000, 1, 0x0c, 0x06, 1, 3, 1, 1, 768000000),	/* SD, 32MHz */
-	MSM_CLOCK_REG(58982400, 6, 0x19, 0x0c, 0, 2, 4, 1, 245760000),	/* BT, 3686400 (*16) */
-//      MSM_CLOCK_REG(64000000, 0x19, 0x60, 0x30, 0, 2, 4, 1, 245760000),       /* BT, 4000000 (*16) */
+	MSM_CLOCK_REG(16000000,   1, 0x0c, 0x06, 0, 2, 4, 1, 245760000), /* BT, 1000000 (*16)*/
+	MSM_CLOCK_REG(19200000,   1, 0x0a, 0x05, 3, 3, 1, 1, 768000000), /* SD, 19.2MHz */
+	MSM_CLOCK_REG(24000000,   1, 0x08, 0x04, 3, 2, 1, 1, 768000000), /* SD & VFE_CLK, 24MHz */
+	MSM_CLOCK_REG(32000000,   1, 0x0c, 0x06, 1, 3, 1, 1, 768000000), /* SD, 32MHz */
+	MSM_CLOCK_REG(48000000,   1, 0x04, 0x02, 0, 2, 4, 1, 245760000), /* UART_HS, 48MHz */
+	MSM_CLOCK_REG(58982400,   6, 0x19, 0x0c, 0, 2, 4, 1, 245760000), /* BT, 3686400 (*16) */
 	{0, 0, 0, 0, 0, 0},
 };
 
 // CDMA phones typically use a 196 MHz PLL0
 static struct mdns_clock_params msm_clock_freq_parameters_pll0_196[] = {
-
 	MSM_CLOCK_REG(144000, 3, 0x64, 0x32, 3, 3, 0, 1, 19200000),	/* SD, 144kHz */
 	MSM_CLOCK_REG(7372800, 3, 0x50, 0x28, 0, 2, 4, 1, 196608000),	/*  460800*16, will be divided by 4 for 115200 */
 	MSM_CLOCK_REG(12000000, 1, 0x20, 0x10, 1, 3, 1, 1, 768000000),	/* SD, 12MHz */
@@ -102,7 +131,6 @@ static struct mdns_clock_params msm_clock_freq_parameters_pll0_196[] = {
 	MSM_CLOCK_REG(24000000, 1, 0x10, 0x08, 1, 3, 1, 1, 768000000),	/* SD, 24MHz */
 	MSM_CLOCK_REG(32000000, 1, 0x0c, 0x06, 1, 3, 1, 1, 768000000),	/* SD, 32MHz */
 	MSM_CLOCK_REG(58982400, 3, 0x0a, 0x05, 0, 2, 4, 1, 196608000),	/* BT, 3686400 (*16) */
-//      MSM_CLOCK_REG(64000000, 0x7d, 0x180, 0xC0, 0, 2, 4, 1, 196608000),      /* BT, 4000000 (*16) */
 	{0, 0, 0, 0, 0, 0},
 };
 
@@ -134,6 +162,191 @@ static int msm_clk_is_enabled(unsigned id)
 		is_enabled = (readl(MSM_CLK_CTL_BASE) & bit) != 0;
 	}
 	return is_enabled;
+}
+
+static void set_grp_rail(int enable)
+{
+	int i = 0;
+	int status = 0;
+
+	if (enable) {
+		REG_OR(MSM_AXI_RESET, 0x20);
+		REG_OR(MSM_ROW_RESET, 0x20000);
+		REG_SET(MSM_VDD_GRP_GFS_CTL, 0x11f);
+		mdelay(20);	// very rough delay
+
+		REG_OR(MSM_GRP_NS_REG, 0x800);
+		REG_OR(MSM_GRP_NS_REG, 0x80);
+		REG_OR(MSM_GRP_NS_REG, 0x200);
+
+		REG_OR(MSM_CLK_CTL_BASE, 0x8);	// grp idx
+
+		REG_AND(MSM_RAIL_CLAMP_IO, 0x4);
+
+		REG_AND(MSM_AXI_BASE + 0x10080, 0x1);
+
+		REG_AND(MSM_AXI_RESET, 0x20);
+		REG_AND(MSM_ROW_RESET, 0x20000);
+	} else {
+		REG_OR(MSM_GRP_NS_REG, 0x800);
+		REG_OR(MSM_GRP_NS_REG, 0x80);
+		REG_OR(MSM_GRP_NS_REG, 0x200);
+
+		REG_OR(MSM_CLK_CTL_BASE, 0x8);	// grp idx
+
+		REG_OR(MSM_AXI_BASE + 0x10080, 0x1);
+
+		while (status == 0 && i < 100) {
+			i++;
+			status = readl(MSM_AXI_BASE + 0x10084) & 0x1;
+		}
+
+		REG_OR(MSM_AXI_RESET, 0x20);
+		REG_OR(MSM_ROW_RESET, 0x20000);
+
+		REG_AND(MSM_GRP_NS_REG, 0x800);
+		REG_AND(MSM_GRP_NS_REG, 0x80);
+		REG_AND(MSM_GRP_NS_REG, 0x200);
+
+		REG_OR(MSM_RAIL_CLAMP_IO, 0x4);	// grp clk ramp
+
+		REG_SET(MSM_VDD_GRP_GFS_CTL, 0x1f);
+	}
+}
+
+static int is_vfe_on()
+{
+	int rc = 0;
+
+	if (!(readl(MSM_VFE_NS_REG) & 0x4000)) {
+		if (!(readl(MSM_CLK_HALT_STATEA) & 0x200)) {
+			rc = 1;
+		} else {
+			rc = !(readl(MSM_VFE_NS_REG) & 0x800);
+		}
+	} else {
+		rc = !(readl(MSM_VFE_NS_REG) & 0x800);
+	}
+
+	return rc;
+}
+
+static void set_vdc_rail(int on)
+{
+	int status, i;
+	static int state = 0;
+	if (state == on)
+		return;
+	state = on;
+
+	printf("+%s(%d)\n", __func__, on);
+	if (state) {
+		REG_OR(MSM_CLK_CTL_BASE + 0xF0, 0x800);
+		if (readl(MSM_CLK_CTL_BASE + 0xF0) & 0x60) {
+			REG_OR(MSM_CLK_CTL_BASE + 0xF0, 0x100);
+		}
+		REG_OR(MSM_CLK_CTL_BASE + 0xF0, 0x200);
+
+		REG_ANDM_OR(MSM_CLK_CTL_BASE + 0x34, 0x7FFFFF, 0x100000);
+		REG_OR(MSM_CLK_CTL_BASE, 0x8);
+		REG_ANDM_OR(MSM_AXI_RESET, 0x3FFF, 0x2);
+		REG_ANDM_OR(MSM_ROW_RESET, 0x7FFFFFF, 0x1);
+		REG_ANDM_OR(MSM_APPS_RESET, 0x1FFF, 0x80);
+
+		REG_SET(MSM_VDD_VDC_GFS_CTL, 0x11f);
+		mdelay(2);
+
+		REG_AND(MSM_RAIL_CLAMP_IO, 0x2);
+
+		REG_AND(MSM_AXI_BASE + 0x10080, 0x4);
+
+		REG_AND(MSM_AXI_RESET, 0x2);
+		REG_AND(MSM_ROW_RESET, 1);
+		REG_AND(MSM_APPS_RESET, 0x80);
+	} else {
+		REG_OR(MSM_CLK_CTL_BASE + 0xF0, 0x800);
+		if (readl(MSM_CLK_CTL_BASE + 0xF0) & 0x60) {
+			REG_OR(MSM_CLK_CTL_BASE + 0xF0, 0x100);
+		}
+		REG_OR(MSM_CLK_CTL_BASE + 0xF0, 0x200);
+		REG_OR(MSM_CLK_CTL_BASE, 0x8);
+
+		REG_OR(MSM_AXI_BASE + 0x10080, 0x4);
+
+		i = status = 0;
+		while (status == 0 && i < 100) {
+			i++;
+			status = readl(MSM_AXI_BASE + 0x10084) & 0x4;
+		}
+
+		REG_OR(MSM_AXI_RESET, 0x2);
+		REG_OR(MSM_ROW_RESET, 0x1);
+
+		REG_AND(MSM_AXI_BASE + 0xF0, 0x200);
+		REG_AND(MSM_AXI_BASE + 0xF0, 0x100);
+		REG_AND(MSM_AXI_BASE + 0xF0, 0x800);
+
+		REG_OR(MSM_RAIL_CLAMP_IO, 0x2);
+
+		REG_SET(MSM_VDD_VDC_GFS_CTL, 0x1f);
+	}
+	printf("-%s(%d)\n", __func__, on);
+}
+
+static void set_vfe_rail(int enable)
+{
+	int i = 0;
+	int status = 0;
+	static int is_enabled = 0;
+
+	printf("+%s(%d)\n", __func__, enable);
+	if (is_enabled == enable)
+		return;
+
+	is_enabled = enable;
+
+	if (enable) {
+		REG_ANDM_OR(MSM_AXI_RESET, 0x3FFF, 1);
+		REG_ANDM_OR(MSM_CLK_CTL_BASE + 0x210, 0x1FFF, 1);
+		REG_SET(MSM_VDD_VFE_GFS_CTL, 0x11F);
+		mdelay(20);
+
+		REG_OR(MSM_CLK_CTL_BASE + 0x44, 1 << 9);
+		REG_OR(MSM_CLK_CTL_BASE + 0x44, 1 << 13);
+		REG_OR(MSM_CLK_CTL_BASE + 0x44, 1 << 11);
+		REG_AND(MSM_CLK_CTL_BASE + 0x44, (1 << 1 | 1 << 2));
+
+		REG_AND_MASK(MSM_RAIL_CLAMP_IO, 0x37);
+
+		REG_AND_MASK(MSM_AXI_BASE + 0x20080, 0xFE);
+
+		REG_AND_MASK(MSM_AXI_RESET, 0x3FFE);
+		REG_AND_MASK(MSM_APPS_RESET, 0x1FFE);
+	} else {
+		REG_ANDM_OR(MSM_CLK_CTL_BASE, 0x3FFFFFFF, 4);
+		REG_OR(MSM_CLK_CTL_BASE + 0x44, 1 << 9);
+		REG_OR(MSM_CLK_CTL_BASE + 0x44, 1 << 13);
+		REG_OR(MSM_CLK_CTL_BASE + 0x44, 1 << 11);
+		REG_AND(MSM_CLK_CTL_BASE + 0x44, (1 << 1 | 1 << 2));
+
+		REG_OR(MSM_AXI_BASE + 0x20080, 0x1);
+		while (status == 0 && i < 100) {
+			i++;
+			status = readl(MSM_AXI_BASE + 0x20084) & 0x1;
+		}
+
+		REG_ANDM_OR(MSM_AXI_RESET, 0x3FFF, 1);
+		REG_ANDM_OR(MSM_APPS_RESET, 0x1FFF, 1);
+
+		REG_OR(MSM_CLK_CTL_BASE + 0x44, (1 << 1 | 1 << 2));
+		REG_AND(MSM_CLK_CTL_BASE + 0x44, 1 << 11);
+		REG_AND(MSM_CLK_CTL_BASE + 0x44, 1 << 13);
+		REG_AND(MSM_CLK_CTL_BASE + 0x44, 1 << 9);
+
+		REG_ANDM_OR(MSM_RAIL_CLAMP_IO, 0x3F, 8);
+		REG_SET(MSM_VDD_VFE_GFS_CTL, 0x1F);
+	}
+	printf("-%s(%d)\n", __func__, enable);
 }
 
 static int msm_clk_enable(unsigned id)
@@ -211,6 +424,35 @@ static int msm_clk_enable(unsigned id)
 		       MSM_CLK_CTL_BASE + params.offset);
 		done = 1;
 		break;
+
+	case IMEM_CLK:
+	case GRP_CLK:
+		set_grp_rail(1);
+		done = 1;
+		break;
+
+	case MDC_CLK:
+		writel(readl(MSM_CLK_CTL_BASE + params.offset) | 0x800,
+		       MSM_CLK_CTL_BASE + params.offset);
+		writel(readl(MSM_CLK_CTL_BASE + params.offset) | 0x200,
+		       MSM_CLK_CTL_BASE + params.offset);
+		done = 1;
+		break;
+
+	case VFE_CLK:
+		set_vfe_rail(1);
+		done = 1;
+		break;
+
+	case VFE_MDC_CLK:
+		done = 1;
+		break;
+
+	case VDC_CLK:
+		set_vdc_rail(1);
+		done = 1;
+		break;
+
 
 	case SDC1_PCLK:
 	case SDC2_PCLK:
@@ -317,6 +559,36 @@ static void msm_clk_disable(unsigned id)
 		       MSM_CLK_CTL_BASE + params.offset);
 		writel(readl(MSM_CLK_CTL_BASE + params.offset) & 0x67f,
 		       MSM_CLK_CTL_BASE + params.offset);
+		done = 1;
+		break;
+
+	case IMEM_CLK:
+	case GRP_CLK:
+		set_grp_rail(0);
+		writel(readl(MSM_CLK_CTL_BASE) & ~(1U << params.idx),
+		       MSM_CLK_CTL_BASE);
+		done = 1;
+		break;
+
+	case MDC_CLK:
+		writel(readl(MSM_CLK_CTL_BASE + params.offset) & ~0x200,
+		       MSM_CLK_CTL_BASE + params.offset);
+		writel(readl(MSM_CLK_CTL_BASE + params.offset) & ~0x800,
+		       MSM_CLK_CTL_BASE + params.offset);
+		done = 1;
+		break;
+
+	case VFE_CLK:
+		set_vfe_rail(0);
+		done = 1;
+		break;
+
+	case VFE_MDC_CLK:
+		done = 1;
+		break;
+
+	case VDC_CLK:
+		set_vdc_rail(0);
 		done = 1;
 		break;
 

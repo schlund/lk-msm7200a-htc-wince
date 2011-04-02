@@ -267,19 +267,15 @@ void target_init(void)
 }
 
 static void msm_prepare_clocks(void) {
-	static int clocks[] = {
-		GRP_CLK,
+	static int clocks_off[] = {
 		VFE_CLK,
 		VDC_CLK,
 		MDC_CLK,
-		I2C_CLK,
 		SDAC_CLK,
 		SDC1_CLK,
 		SDC2_CLK,
 		SDC3_CLK,
 		SDC4_CLK,
-		TSIF_CLK,
-		TSIF_REF_CLK,
 		UART1_CLK,
 		UART2_CLK,
 		UART3_CLK,
@@ -288,14 +284,17 @@ static void msm_prepare_clocks(void) {
 		USB_HS_CLK,
 		ADM_CLK,
 	};
-	for (int i = 0; i < (int)ARRAY_SIZE(clocks); i++)
-		clk_disable(clocks[i]);
 
-	/*
-	 * Never disable MDP clock...
-	 * or your linuxes will crash
-	 */
-	clk_enable(MDP_CLK);
+	static int clocks_on[] = {
+		IMEM_CLK,
+		MDP_CLK,
+	};
+
+	for (int i = 0; i < (int)ARRAY_SIZE(clocks_off); i++)
+		clk_disable(clocks_off[i]);
+
+	for (int i = 0; i < (int)ARRAY_SIZE(clocks_on); i++)
+		clk_enable(clocks_on[i]);
 }
 
 void target_exit(void) {
