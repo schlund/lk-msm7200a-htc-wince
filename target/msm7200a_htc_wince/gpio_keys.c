@@ -23,7 +23,19 @@
 static enum handler_return gpio_key_irq(void *arg)
 {
 	struct gpio_key *key = arg;
+	mdelay(25);
 	int state = !!gpio_get(key->gpio);
+
+	//some debouncing
+	for (int i = 0; i < 5; i++) {
+		mdelay(10);
+		int state2 = !!gpio_get(key->gpio);
+		if (state2 != state) {
+//			printf("%s: failed to reach stable state after %d ms\n",
+//					__func__, i * 10);
+			return INT_NO_RESCHEDULE;
+		}
+	}
 	keys_post_event(key->keycode, state ^ key->active_low);
 	return INT_RESCHEDULE;
 }
