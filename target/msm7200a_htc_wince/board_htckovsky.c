@@ -379,6 +379,26 @@ static void htckovsky_display_exit(void) {
 }
 
 /******************************************************************************
+ * LEDs
+ *****************************************************************************/
+static void htckovsky_set_key_light(int brightness) {
+	unsigned char buffer[3] = {};
+
+	//Front key light
+	buffer[0] = 0x14;
+	buffer[1] = brightness ? 0x80 : 0;
+	buffer[2] = brightness;
+	msm_i2c_write(0x66, buffer, 3);
+}
+
+static void htckovsky_set_color_leds(bool red, bool green, bool blue) {
+	unsigned char buffer[2] = {};
+	buffer[0] = 0x20;
+	buffer[1] = !!red | (!!green << 1) | (!!blue << 2);
+	msm_i2c_write(0x66, buffer, 2);
+}
+
+/******************************************************************************
  * USB
  *****************************************************************************/
 static void htckovsky_usb_disable(void)
@@ -559,23 +579,6 @@ static void htckovsky_nand_init(void) {
 	flash_set_ptable(&flash_ptable);
 }
 /******************************************************************************
- * LEDs
- *****************************************************************************/
-static void htckovsky_set_light(int brightness) {
-	unsigned char buffer[4] = {};
-
-	//Front key light
-	buffer[0] = 0x14;
-	buffer[1] = brightness ? 0x80 : 0;
-	buffer[2] = brightness;
-	msm_i2c_write(0x66, buffer, 3);
-
-	//RED LEDs
-	buffer[0] = 0x20;
-	buffer[1] = brightness ? 1 : 0;
-	msm_i2c_write(0x66, buffer, 2);
-}
-/******************************************************************************
  * Exports
  *****************************************************************************/
 static void htckovsky_early_init(void) {
@@ -583,10 +586,10 @@ static void htckovsky_early_init(void) {
 }
 
 static void htckovsky_init(void) {
-	for (int i = 0; i < 160; i += 40) {
-		htckovsky_set_light(i);
-		mdelay(10);
-	}
+	htckovsky_set_key_light(160);
+	mdelay(10);
+	htckovsky_set_color_leds(1, 0, 1);
+	mdelay(20);
 	clk_set_rate(MDP_CLK, 192 * 1000 * 1000);
 	htckovsky_usb_init();
 	htckovsky_nand_init();
