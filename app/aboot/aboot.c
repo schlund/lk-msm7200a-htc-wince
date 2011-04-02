@@ -41,6 +41,7 @@
 #include <dev/flash.h>
 #include <dev/keys.h>
 #include <dev/fbcon.h>
+#include <dev/udc.h>
 #include <dev/usb.h>
 #include <kernel/thread.h>
 #include <lib/ptable.h>
@@ -569,6 +570,8 @@ static void handle_keypad(void) {
 
 void aboot_init(const struct app_descriptor *app)
 {
+	page_size = flash_page_size();
+	page_mask = page_size - 1;
 	enum boot_reason bootreason = get_boot_reason();
 	switch (bootreason) {
 		case BOOT_FASTBOOT:

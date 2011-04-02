@@ -331,7 +331,7 @@ static int fastboot_handler(void *arg)
 static void fastboot_notify(struct udc_gadget *gadget, unsigned event)
 {
 	if (event == UDC_EVENT_ONLINE) {
-		fastboot_state = STATE_COMMAND;
+		fastboot_state = STATE_COMPLETE;
 		event_signal(&usb_online, 0);
 	}
 	else if (event == UDC_EVENT_OFFLINE) {
