@@ -371,9 +371,9 @@ static enum handler_return msm_gpio_isr(void *arg)
 	}
 	for (unsigned i = 0; i < ARRAY_SIZE(gpio_irq_handlers); i++) {
 		if (gpio_irq_handlers[i].pending) {
+			gpio_irq_handlers[i].pending = 0;
 			if (gpio_irq_handlers[i].handler)
 				gpio_irq_handlers[i].handler(gpio_irq_handlers[i].arg);
-			gpio_irq_handlers[i].pending = 0;
 		}
 	}
 	exit_critical_section();
