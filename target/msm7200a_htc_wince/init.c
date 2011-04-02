@@ -19,10 +19,12 @@
 #include <bootreason.h>
 #include <debug.h>
 #include <reg.h>
+#include <platform.h>
 #include <string.h>
 #include <target.h>
 #include <arch/mtype.h>
 #include <dev/gpio.h>
+#include <kernel/thread.h>
 #include <target/dynboard.h>
 #include <target/htckovsky.h>
 #include <target/htcrhodium.h>
@@ -80,6 +82,11 @@ static struct machine_map {
 	},
 	{
 		.name = "RHOD400",
+		.mtype = MACH_TYPE_HTCRHODIUM,
+		.board = &htcrhodium_board,
+	},
+	{
+		.name = "RHOD210",
 		.mtype = MACH_TYPE_HTCRHODIUM,
 		.board = &htcrhodium_board,
 	}
@@ -206,13 +213,14 @@ enum boot_reason get_boot_reason() {
 }
 
 void target_shutdown(void) {
-	target_exit();
+	enter_critical_section();
+	platform_exit();
 	dex_power_off();
 }
 
 void reboot_device(enum boot_reason reboot_mode)
 {
-	target_exit();
+	enter_critical_section();
 	switch (reboot_mode) {
 		case BOOT_FASTBOOT:
 			writel(MARK_FASTBOOT, LK_BOOTREASON_ADDR);
@@ -226,6 +234,7 @@ void reboot_device(enum boot_reason reboot_mode)
 		default:
 			break;
 	}
+	platform_exit();
 	dex_reboot();
 }
 
