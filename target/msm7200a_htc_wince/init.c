@@ -232,6 +232,8 @@ void reboot_device(enum boot_reason reboot_mode)
 			writel(MARK_RECOVERY ^ MARK_LK_TAG, LK_BOOTREASON_ADDR + 4);
 			break;
 		default:
+			writel(0, LK_BOOTREASON_ADDR);
+			writel(0, LK_BOOTREASON_ADDR + 4);
 			break;
 	}
 	platform_exit();
