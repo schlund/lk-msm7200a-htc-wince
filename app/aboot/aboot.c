@@ -397,7 +397,7 @@ static void enter_fastboot(void) {
 	fastboot_publish("product", TARGET(BOARD));
 	fastboot_publish("kernel", "lk");
 
-	fastboot_init(target_get_scratch_address(), 120 * 1024 * 1024);
+	fastboot_init(target_get_scratch_address(), 96 * 1024 * 1024);
 	dprintf(INFO, "starting usb\n");
 	udc_start();
 }
@@ -572,12 +572,12 @@ void aboot_init(const struct app_descriptor *app)
 	enum boot_reason bootreason = get_boot_reason();
 	switch (bootreason) {
 		case BOOT_FASTBOOT:
-			goto fastboot;
-			break;
+			enter_fastboot();
+			return;
 		case BOOT_RECOVERY:
 			boot_into_recovery = 1;
-			goto skip_keypad;
-			break;
+			boot_nand();
+			return;
 		default:
 			break;
 	}
@@ -590,19 +590,11 @@ void aboot_init(const struct app_descriptor *app)
 	ret = keys_wait_event_timeout(&code, &value, 5000);
 	if (ret) {
 		printf("no user choice, defaulting to nand boot\n");
-		goto skip_keypad;
+		boot_nand();
+		return;
 	}
 
 	handle_keypad();
-
-skip_keypad:
-	if (is_usb_connected())
-		goto fastboot;
-
-	boot_nand();
-
-fastboot:
-	enter_fastboot();
 }
 
 APP_START(aboot)
