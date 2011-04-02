@@ -555,7 +555,7 @@ static void handle_keypad(void) {
 
 			case KEY_ENTER:
 			case KEY_POWER:
-				if (menu_update(MENU_SELECT));
+				if (menu_update(MENU_SELECT))
 					return;
 				//printf("Key enter\n");
 				break;
