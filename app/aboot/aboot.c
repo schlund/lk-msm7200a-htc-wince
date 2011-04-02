@@ -120,10 +120,15 @@ void boot_linux(void *kernel, unsigned *tags,
 	}
 
 	char* t_cmdline = target_get_cmdline();
+	char* cmd = NULL;
 
 	if (cmdline && cmdline[0]) {
+		cmd = cmdline;
 		cmdline_len = strlen(cmdline);
-		have_cmdline = 1;
+	}
+	else if (t_cmdline && t_cmdline[0]) {
+		cmd = t_cmdline;
+		cmdline_len = strlen(t_cmdline);
 	}
 
 	if (cmdline_len > 0) {
@@ -135,15 +140,8 @@ void boot_linux(void *kernel, unsigned *tags,
 		*ptr++ = (n / 4) + 2;
 		*ptr++ = 0x54410009;
 		dst = (char *)ptr;
-		if (have_cmdline) {
-			src = cmdline;
-			while ((*dst++ = *src++)) ;
-		}
-		else if (t_cmdline) {
-			src = t_cmdline;
-			while ((*dst++ = *src++));
-		}
-
+		src = cmd;
+		while ((*dst++ = *src++)) ;
 		ptr += (n / 4);
 	}
 
@@ -153,10 +151,8 @@ void boot_linux(void *kernel, unsigned *tags,
 
 	dprintf(INFO, "booting linux @ %p, ramdisk @ %p (%d)\n",
 		kernel, ramdisk, ramdisk_size);
-	if (have_cmdline)
-		dprintf(INFO, "cmdline: %s\n", cmdline);
-	else if (t_cmdline)
-		dprintf(INFO, "cmdline: %s\n", t_cmdline);
+	if (cmd)
+		dprintf(INFO, "cmdline: %s\n", cmd);
 
 	enter_critical_section();
 	platform_exit();
