@@ -246,6 +246,7 @@ void target_init(void)
 	dprintf(INFO, "+%s\n", __func__);
 	setup_board();
 	clk_enable(MDP_CLK);
+	clk_enable(PMDH_CLK);
 	if (board && board->early_init)
 		board->early_init();
 	int ret = msm_dex_comm_init();
@@ -271,6 +272,8 @@ static void msm_prepare_clocks(void) {
 		VFE_CLK,
 		VDC_CLK,
 		MDC_CLK,
+		I2C_CLK,
+		SDAC_CLK,
 		SDC1_CLK,
 		SDC2_CLK,
 		SDC3_CLK,
