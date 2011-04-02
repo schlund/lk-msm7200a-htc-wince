@@ -305,6 +305,29 @@ void target_exit(void) {
 	msm_prepare_clocks();
 }
 
+void* target_get_scratch_addr(void) {
+	if (board && board->scratch_addr)
+		return board->scratch_addr;
+
+	return (void*)SCRATCH_ADDR;
+}
+
+
+unsigned target_get_scratch_size(void) {
+	if (board && board->scratch_addr)
+		return board->scratch_size;
+
+	//least common value supported by msm72k htc boards
+	return (98 << 20) - SCRATCH_ADDR;
+}
+
+char* target_get_cmdline(void) {
+	if (board && board->cmdline)
+		return board->cmdline;
+
+	return "";
+}
+
 enum mtype target_machtype(void)
 {
 	return mtype;

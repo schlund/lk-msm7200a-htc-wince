@@ -394,7 +394,7 @@ static void htckovsky_set_key_light(int brightness) {
 static void htckovsky_set_color_leds(bool red, bool green, bool blue) {
 	unsigned char buffer[2] = {};
 	buffer[0] = 0x20;
-	buffer[1] = !!red | (!!green << 1) | (!!blue << 2);
+	buffer[1] = red | (green << 1) | (blue << 2);
 	msm_i2c_write(0x66, buffer, 2);
 }
 
@@ -605,4 +605,6 @@ struct msm7k_board htckovsky_board = {
 	.early_init = htckovsky_early_init,
 	.init = htckovsky_init,
 	.exit = htckovsky_exit,
+	.cmdline = "fbcon=rotate:2 init=/init physkeyboard=kovsq force_cdma=0"
+	"hwrotation=180 lcd.density=240",
 };

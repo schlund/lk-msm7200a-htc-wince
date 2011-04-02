@@ -34,6 +34,10 @@ void target_init(void);
 
 /* get memory address for fastboot image loading */
 void *target_get_scratch_address(void);
+/* get memory size for fastboot image loading */
+unsigned target_get_scratch_size(void);
+
+char* target_get_cmdline(void);
 
 /* if target is using eMMC bootup */
 int target_is_emmc_boot(void);

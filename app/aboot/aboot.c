@@ -52,9 +52,6 @@
 
 #define EXPAND(NAME) #NAME
 #define TARGET(NAME) EXPAND(NAME)
-#define DEFAULT_CMDLINE "force_cdma=0 no_partitions init=/init fbcon=rotate:2 rel_path=andboot";
-
-static const char *my_cmd = "";
 
 struct atag_ptbl_entry {
 	char name[16];
@@ -89,7 +86,7 @@ void boot_linux(void *kernel, unsigned *tags,
 	void (*entry) (unsigned, unsigned, unsigned *) = kernel;
 	struct ptable *ptable;
 	int cmdline_len = 0;
-	int have_cmdline = 0;
+	bool have_cmdline = 0;
 
 	/* CORE */
 	*ptr++ = 2;
@@ -122,13 +119,12 @@ void boot_linux(void *kernel, unsigned *tags,
 		}
 	}
 
+	char* t_cmdline = target_get_cmdline();
+
 	if (cmdline && cmdline[0]) {
 		cmdline_len = strlen(cmdline);
 		have_cmdline = 1;
 	}
-
-	cmdline_len += strlen(my_cmd);
-
 
 	if (cmdline_len > 0) {
 		const char *src;
@@ -143,12 +139,10 @@ void boot_linux(void *kernel, unsigned *tags,
 			src = cmdline;
 			while ((*dst++ = *src++)) ;
 		}
-
-		src = my_cmd;
-			if (have_cmdline)
-				--dst;
-			have_cmdline = 1;
-			while ((*dst++ = *src++)) ;
+		else if (t_cmdline) {
+			src = t_cmdline;
+			while ((*dst++ = *src++));
+		}
 
 		ptr += (n / 4);
 	}
@@ -159,8 +153,10 @@ void boot_linux(void *kernel, unsigned *tags,
 
 	dprintf(INFO, "booting linux @ %p, ramdisk @ %p (%d)\n",
 		kernel, ramdisk, ramdisk_size);
-	if (cmdline)
+	if (have_cmdline)
 		dprintf(INFO, "cmdline: %s\n", cmdline);
+	else if (t_cmdline)
+		dprintf(INFO, "cmdline: %s\n", t_cmdline);
 
 	enter_critical_section();
 	platform_exit();
@@ -246,7 +242,7 @@ int boot_linux_from_flash(void)
 	if (hdr->cmdline[0]) {
 		cmdline = (char *)hdr->cmdline;
 	} else {
-		cmdline = DEFAULT_CMDLINE;
+		cmdline = target_get_cmdline();
 	}
 	dprintf(INFO, "cmdline = '%s'\n", cmdline);
 
@@ -398,7 +394,7 @@ static void enter_fastboot(void) {
 	fastboot_publish("product", TARGET(BOARD));
 	fastboot_publish("kernel", "lk");
 
-	fastboot_init(target_get_scratch_address(), 96 * 1024 * 1024);
+	fastboot_init(target_get_scratch_address(), target_get_scratch_size());
 	dprintf(INFO, "starting usb\n");
 	udc_start();
 }

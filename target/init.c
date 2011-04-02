@@ -48,6 +48,18 @@ __WEAK void *target_get_scratch_address(void)
 	return (void *)(SCRATCH_ADDR);
 }
 
+__WEAK unsigned target_get_scratch_size(void) {
+	#ifdef SCRATCH_SIZE
+		return SCRATCH_SIZE;
+	#else
+		return 64 << 20;
+	#endif
+}
+
+__WEAK char* target_get_cmdline(void) {
+	return "mem=64M console=null";
+}
+
 __WEAK int target_is_emmc_boot(void)
 {
 #if _EMMC_BOOT
