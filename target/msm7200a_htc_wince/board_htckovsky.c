@@ -458,7 +458,7 @@ static void htckovsky_usb_init(void) {
 static struct gpio_key htckovsky_gpio_keys[] = {
 	{KOVS100_POWER_KEY, KEY_POWER, true, "Power"},
 	{KOVS100_CAM_FULL_KEY, KEY_UP, true, "Camera full press"},
-	{KOVS100_CAM_HALF_KEY, KEY_HOME, true, "Camera half press"},
+	{KOVS100_CAM_HALF_KEY, KEY_DOWN, true, "Camera half press"},
 };
 
 static struct gpio_keys_pdata htckovsky_gpio_keys_pdata = {
