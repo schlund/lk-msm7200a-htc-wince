@@ -544,21 +544,21 @@ static void handle_keypad(void) {
 			case KEY_UP:
 			case KEY_VOLUMEUP:
 				menu_update(MENU_UP);
-				//printf("Key up\n");
+				printf("Key up\n");
 				break;
 
 			case KEY_DOWN:
 			case KEY_VOLUMEDOWN:
 				menu_update(MENU_DOWN);
 					return;
-				//printf("Key down\n");
+				printf("Key down\n");
 				break;
 
 			case KEY_ENTER:
 			case KEY_POWER:
-				if menu_update(MENU_SELECT);
+				if (menu_update(MENU_SELECT));
 					return;
-				//printf("Key enter\n");
+				printf("Key enter\n");
 				break;
 
 			default:
