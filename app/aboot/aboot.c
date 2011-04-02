@@ -132,16 +132,14 @@ void boot_linux(void *kernel, unsigned *tags,
 	}
 
 	if (cmdline_len > 0) {
-		const char *src;
-		char *dst;
+		const char *src = cmd;
 		unsigned n;
 		/* include terminating 0 and round up to a word multiple */
 		n = (cmdline_len + 4) & (~3);
 		*ptr++ = (n / 4) + 2;
 		*ptr++ = 0x54410009;
-		dst = (char *)ptr;
-		src = cmd;
-		while ((*dst++ = *src++)) ;
+		char *dst = (char *)ptr;
+		while ((*dst++ = *src++));
 		ptr += (n / 4);
 	}
 
@@ -424,6 +422,11 @@ static struct menu_entry {
 	bool oneshot;
 } menu[] = {
 	{
+		"Fastboot mode",
+		enter_fastboot,
+		true,
+	},
+	{
 		"Boot from NAND",
 		boot_nand,
 		true,
@@ -431,11 +434,6 @@ static struct menu_entry {
 	{
 		"Boot into recovery",
 		boot_recovery,
-		true,
-	},
-	{
-		"Fastboot mode",
-		enter_fastboot,
 		true,
 	},
 	{
