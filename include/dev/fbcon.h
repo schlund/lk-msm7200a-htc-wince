@@ -69,6 +69,7 @@ struct fbcon_config {
 
 void fbcon_setup(struct fbcon_config *cfg);
 void fbcon_teardown(void);
+void fbcon_clear(void);
 void fbcon_putc(char c);
 
 #endif				/* __DEV_FBCON_H */

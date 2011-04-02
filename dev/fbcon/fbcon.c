@@ -68,8 +68,7 @@ static void fbcon_flush(void)
 		while (!fbcon.config->update_done()) ;
 }
 
-static void
-fbcon_draw_glyph_180(unsigned char c)
+static void fbcon_draw_glyph_180(unsigned char c)
 {
 	uint16_t *pixels =
 	fbcon.config->base +
@@ -143,8 +142,9 @@ static void fbcon_scroll_up_0(void) {
 }
 
 /* TODO: take stride into account */
-static void fbcon_clear(void)
+void fbcon_clear(void)
 {
+	enter_critical_section();
 	unsigned short *start = fbcon.config->base;
 	unsigned short * *end =
 	fbcon.config->base +
@@ -152,10 +152,9 @@ static void fbcon_clear(void)
 	while (start < end) {
 		*start++ = fbcon.bg_color;
 	}
-
-//	unsigned count = fbcon.config->width * fbcon.config->height;
-//	memset(fbcon.config->base, fbcon.bg_color,
-//			count * ((fbcon.config->bpp) / 8));
+	fbcon_flush();
+	fbcon.position.x = fbcon.position.y = 0;
+	exit_critical_section();
 }
 
 void fbcon_putc(char c)
@@ -215,8 +214,8 @@ void fbcon_setup(struct fbcon_config *_config)
 
 	switch (fbcon.config->format) {
 	case FB_FORMAT_RGB565:
-		fbcon.fg_color = RGB565_BLACK;
-		fbcon.bg_color = RGB565_CYAN;
+		fbcon.fg_color = RGB565_GREEN;
+		fbcon.bg_color = RGB565_BLACK;
 		break;
 
 	default:
