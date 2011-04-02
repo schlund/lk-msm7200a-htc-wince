@@ -31,6 +31,7 @@
  */
 
 #include <app.h>
+#include <array.h>
 #include <debug.h>
 #include <platform.h>
 #include <string.h>
@@ -78,8 +79,7 @@ static void ptentry_to_tag(unsigned **ptr, struct ptentry *ptn)
 	*ptr += sizeof(struct atag_ptbl_entry) / sizeof(unsigned);
 }
 
-void
-boot_linux(void *kernel, unsigned *tags,
+void boot_linux(void *kernel, unsigned *tags,
 	   const char *cmdline, unsigned machtype,
 	   void *ramdisk, unsigned ramdisk_size)
 {
@@ -386,39 +386,7 @@ void cmd_reboot_bootloader(const char *arg, void *data, unsigned sz)
 	reboot_device(BOOT_FASTBOOT);
 }
 
-void aboot_init(const struct app_descriptor *app)
-{
-	enum boot_reason bootreason = get_boot_reason();
-	switch (bootreason) {
-		case BOOT_FASTBOOT:
-			goto fastboot;
-			break;
-		case BOOT_RECOVERY:
-			boot_into_recovery = 1;
-			break;
-		default:
-			break;
-	}
-
-	//TODO: add a pretty menu
-
-	if (keys_get_state(KEY_HOME) || keys_get_state(KEY_POWER))
-		boot_into_recovery = 1;
-	if (keys_get_state(KEY_END))
-		goto fastboot;
-
-	if (is_usb_connected())
-		goto fastboot;
-
-	//TODO: add checks for charger here
-	recovery_init();
-	boot_linux_from_flash();
-
-	dprintf(CRITICAL, "ERROR: Could not do normal boot. Reverting "
-		"to fastboot mode.\n");
-
-fastboot:
-
+static void enter_fastboot(void) {
 	fastboot_register("flash:", cmd_flash);
 	fastboot_register("erase:", cmd_erase);
 
@@ -432,6 +400,203 @@ fastboot:
 	fastboot_init(target_get_scratch_address(), 120 * 1024 * 1024);
 	dprintf(INFO, "starting usb\n");
 	udc_start();
+}
+
+static void reboot(void) {
+	reboot_device(BOOT_WARM);
+}
+
+static void reboot_bootloader(void) {
+	reboot_device(BOOT_FASTBOOT);
+}
+
+static void boot_nand(void) {
+	recovery_init();
+	boot_linux_from_flash();
+
+	dprintf(CRITICAL, "ERROR: Could not do normal boot. Reverting "
+		"to fastboot mode.\n");
+
+	enter_fastboot();
+}
+
+static void boot_recovery(void) {
+	boot_into_recovery = 1;
+	boot_nand();
+}
+
+static struct menu_entry {
+	char* title;
+	void (*callback)(void);
+	bool oneshot;
+} menu[] = {
+	{
+		"Boot from NAND",
+		boot_nand,
+		true,
+	},
+	{
+		"Boot into recovery",
+		boot_recovery,
+		true,
+	},
+	{
+		"Fastboot mode",
+		enter_fastboot,
+		true,
+	},
+	{
+		"Reboot",
+		reboot,
+		false,
+	},
+	{
+		"Reboot to bootloader",
+		reboot_bootloader,
+		false,
+	},
+	{
+		"Shutdown",
+		target_shutdown,
+		false,
+	},
+	{
+		"Charge mode",
+		NULL,
+		false,
+	},
+	{
+		"Dump ramconsole",
+		NULL,
+		false,
+	}
+};
+
+enum menu_action {
+	MENU_UP,
+	MENU_DOWN,
+	MENU_SELECT,
+	MENU_REDRAW,
+};
+
+static unsigned curr_menu_idx = 0;
+
+static bool menu_update(enum menu_action cmd) {
+	unsigned idx = 0;
+	enter_critical_section();
+	switch (cmd) {
+		case MENU_UP:
+			curr_menu_idx = (curr_menu_idx + 1) % ARRAY_SIZE(menu);
+			break;
+		case MENU_DOWN:
+			curr_menu_idx = curr_menu_idx > 0 ?
+				curr_menu_idx - 1 : ARRAY_SIZE(menu) - 1;
+			break;
+		case MENU_SELECT:
+			goto callback;
+		case MENU_REDRAW:
+			break;
+	}
+	idx = curr_menu_idx;
+	exit_critical_section();
+
+	fbcon_clear();
+	for (unsigned i = 0; i < ARRAY_SIZE(menu); i++) {
+		if (idx == i) {
+			printf(">>>%d: %s<<<\n", i, menu[i].title);
+		}
+		else {
+			printf("%d: %s\n", i, menu[i].title);
+		}
+	}
+	return false;
+
+callback:
+	idx = curr_menu_idx;
+	exit_critical_section();
+	if (menu[idx].callback) {
+		menu[idx].callback();
+		return menu[idx].oneshot;
+	}
+	else {
+		printf("No callback for menu item %d\n", curr_menu_idx);
+	}
+	return false;
+}
+
+static void handle_keypad(void) {
+	int ret = 0;
+	uint16_t last_code = 0;
+	uint16_t code = 0;
+	int16_t value = 0;
+	int16_t last_value = -1;
+
+	printf("press any key to enter boot menu...\n");
+	ret = keys_wait_event_timeout(&last_code, &value, 5000);
+	if (ret)
+		return;
+
+	menu_update(MENU_REDRAW);
+	while (!(ret = keys_wait_event_timeout(&code, &value, 0))) {
+		//do not handle both release and keypress
+		if (last_code == code && last_value != value)
+			continue;
+
+		last_code = code;
+		last_value = value;
+
+		switch (code) {
+			case KEY_UP:
+			case KEY_VOLUMEUP:
+				menu_update(MENU_UP);
+				//printf("Key up\n");
+				break;
+
+			case KEY_DOWN:
+			case KEY_VOLUMEDOWN:
+				if(menu_update(MENU_DOWN));
+					return;
+				//printf("Key down\n");
+				break;
+
+			case KEY_ENTER:
+			case KEY_POWER:
+				menu_update(MENU_SELECT);
+				//printf("Key enter\n");
+				break;
+
+			default:
+				break;
+		}
+		//printf("[KEY]: code=%d value=%d\n", code, value);
+	}
+}
+
+void aboot_init(const struct app_descriptor *app)
+{
+	enum boot_reason bootreason = get_boot_reason();
+	switch (bootreason) {
+		case BOOT_FASTBOOT:
+			goto fastboot;
+			break;
+		case BOOT_RECOVERY:
+			boot_into_recovery = 1;
+			goto skip_keypad;
+			break;
+		default:
+			break;
+	}
+
+	handle_keypad();
+	printf("no user choice, defaulting to nand boot\n");
+	if (is_usb_connected())
+		goto fastboot;
+
+skip_keypad:
+	boot_nand();
+
+fastboot:
+	enter_fastboot();
 }
 
 APP_START(aboot)
