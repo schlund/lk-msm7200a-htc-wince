@@ -188,6 +188,7 @@ static int usb_read(void *_buf, unsigned len)
 	return count;
 
 oops:
+	printf("[fastboot] %s: oops\n", __func__);
 	fastboot_state = STATE_ERROR;
 	return -1;
 }
@@ -330,6 +331,7 @@ static int fastboot_handler(void *arg)
 static void fastboot_notify(struct udc_gadget *gadget, unsigned event)
 {
 	if (event == UDC_EVENT_ONLINE) {
+		fastboot_state = STATE_COMMAND;
 		event_signal(&usb_online, 0);
 	}
 	else if (event == UDC_EVENT_OFFLINE) {
