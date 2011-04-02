@@ -550,7 +550,6 @@ static void handle_keypad(void) {
 			case KEY_DOWN:
 			case KEY_VOLUMEDOWN:
 				menu_update(MENU_DOWN);
-					return;
 				printf("Key down\n");
 				break;
 
