@@ -35,6 +35,9 @@
 #include <sys/types.h>
 
 /* these are just the ascii values for the chars */
+#define KEY_ENTER	0xa
+
+
 #define KEY_0		0x30
 #define KEY_1		0x31
 #define KEY_2		0x32
@@ -82,12 +85,13 @@
 #define KEY_BACK	0x123
 #define KEY_MENU	0x124
 #define KEY_END		0x125
-#define KEY_POWER		0x126
+#define KEY_POWER	0x126
 
 #define MAX_KEYS	0x1ff
 
 void keys_init(void);
 void keys_post_event(uint16_t code, int16_t value);
 int keys_get_state(uint16_t code);
+int keys_wait_event_timeout(uint16_t *code, int16_t* value, time_t timeout);
 
-#endif				/* __DEV_KEYS_H */
+#endif /* __DEV_KEYS_H */

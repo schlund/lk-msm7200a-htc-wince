@@ -31,14 +31,20 @@
 
 #include <bits.h>
 #include <debug.h>
+#include <err.h>
 #include <string.h>
 #include <dev/keys.h>
+#include <kernel/event.h>
+#include <sys/types.h>
 
-static unsigned long key_bitmap[BITMAP_NUM_WORDS(MAX_KEYS)] = {};
+static unsigned long key_bitmap[BITMAP_NUM_WORDS(MAX_KEYS)];
+static event_t input_evt;
+static uint16_t last_key = 0;
 
 void keys_init(void)
 {
 	memset(key_bitmap, 0, sizeof(key_bitmap));
+	event_init(&input_evt, false, 0);
 }
 
 void keys_post_event(uint16_t code, int16_t value)
@@ -54,7 +60,12 @@ void keys_post_event(uint16_t code, int16_t value)
 	else
 		bitmap_clear(key_bitmap, code);
 
-//	dprintf(INFO, "key state change: %d %d\n", code, value);
+	enter_critical_section();
+	last_key = code;
+	exit_critical_section();
+
+	//dprintf(INFO, "key state change: %d %d\n", code, value);
+	event_signal(&input_evt, false);
 }
 
 int keys_get_state(uint16_t code)
@@ -64,4 +75,26 @@ int keys_get_state(uint16_t code)
 		return -1;
 	}
 	return bitmap_test(key_bitmap, code);
+}
+
+int keys_wait_event_timeout(uint16_t *code, int16_t* value, time_t timeout) {
+	if (!value || !code)
+		return ERR_INVALID_ARGS;
+
+	status_t ret = NO_ERROR;
+	if (timeout)
+		ret = event_wait_timeout(&input_evt, timeout);
+	else
+		ret = event_wait(&input_evt);
+
+	event_unsignal(&input_evt);
+	if (ret == NO_ERROR) {
+		enter_critical_section();
+		*code = last_key;
+		*value = keys_get_state(last_key);
+		exit_critical_section();
+		return 0;
+	}
+
+	return ERROR;
 }
