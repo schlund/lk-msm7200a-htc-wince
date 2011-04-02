@@ -28,6 +28,7 @@
 #include <app.h>
 #include <arch.h>
 #include <platform.h>
+#include <dev/keys.h>
 #include <target.h>
 #include <lib/heap.h>
 #include <kernel/thread.h>
@@ -98,15 +99,18 @@ void kmain(void)
 	// initialize kernel timers
 	dprintf(SPEW, "initializing timers\n");
 	timer_init();
+	keys_init();
 
 #if (!ENABLE_NANDWRITE)
 	// create a thread to complete system initialization
 	dprintf(SPEW, "creating bootstrap completion thread\n");
+	
+	// enable interrupts
+	exit_critical_section();
+	
 	thread_resume(thread_create
 		      ("bootstrap2", &bootstrap2, NULL, DEFAULT_PRIORITY,
 		       DEFAULT_STACK_SIZE));
-	// enable interrupts
-	exit_critical_section();
 
 	// become the idle thread
 	thread_become_idle();
