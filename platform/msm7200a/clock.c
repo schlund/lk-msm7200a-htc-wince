@@ -239,7 +239,6 @@ static void set_vdc_rail(int on)
 		return;
 	state = on;
 
-	printf("+%s(%d)\n", __func__, on);
 	if (state) {
 		REG_OR(MSM_CLK_CTL_BASE + 0xF0, 0x800);
 		if (readl(MSM_CLK_CTL_BASE + 0xF0) & 0x60) {
@@ -290,7 +289,6 @@ static void set_vdc_rail(int on)
 
 		REG_SET(MSM_VDD_VDC_GFS_CTL, 0x1f);
 	}
-	printf("-%s(%d)\n", __func__, on);
 }
 
 static void set_vfe_rail(int enable)
@@ -299,7 +297,6 @@ static void set_vfe_rail(int enable)
 	int status = 0;
 	static int is_enabled = 0;
 
-	printf("+%s(%d)\n", __func__, enable);
 	if (is_enabled == enable)
 		return;
 
@@ -346,7 +343,6 @@ static void set_vfe_rail(int enable)
 		REG_ANDM_OR(MSM_RAIL_CLAMP_IO, 0x3F, 8);
 		REG_SET(MSM_VDD_VFE_GFS_CTL, 0x1F);
 	}
-	printf("-%s(%d)\n", __func__, enable);
 }
 
 static int msm_clk_enable(unsigned id)

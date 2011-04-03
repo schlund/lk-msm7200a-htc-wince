@@ -19,6 +19,7 @@
 #include <dev/keys.h>
 #include <dev/gpio_keys.h>
 #include <platform/interrupts.h>
+#include <platform/timer.h>
 
 static enum handler_return gpio_key_irq(void *arg)
 {

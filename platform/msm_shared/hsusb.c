@@ -922,9 +922,6 @@ void usb_charger_change_state(void)
 			ulpi_write(0x48, 0x04);
 			set_charger_state(CHG_AC);
 		}
-//		if (WALL_CHARGER == TRUE || HOST_CHARGER == TRUE) {
-//			//battery_charging_image();
-//		}
 	} else if ((readl(USB_USBCMD) & 0x01) == 0) {
 		writel(0x00080001, USB_USBCMD);
 		set_charger_state(CHG_OFF);

@@ -17,6 +17,9 @@ struct msm7k_board {
 	void (*early_init)(void);
 	void (*init)(void);
 	void (*exit)(void);
+	void *scratch_addr;
+	unsigned scratch_size;
+	char *cmdline;
 };
 
 #endif //__DYNBOARD_H__

@@ -281,10 +281,7 @@ static void msm_prepare_clocks(void) {
 		UART1_CLK,
 		UART2_CLK,
 		UART3_CLK,
-		UART1DM_CLK,
-		UART2DM_CLK,
 		USB_HS_CLK,
-		ADM_CLK,
 	};
 
 	static int clocks_on[] = {
@@ -302,7 +299,7 @@ static void msm_prepare_clocks(void) {
 void target_exit(void) {
 	if (board && board->exit)
 		board->exit();
-	msm_i2c_remove();
+//	msm_i2c_remove();
 	msm_prepare_clocks();
 }
 
