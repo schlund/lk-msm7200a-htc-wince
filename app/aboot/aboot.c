@@ -82,11 +82,13 @@ void boot_linux(void *kernel, unsigned *tags,
 	   void *ramdisk, unsigned ramdisk_size)
 {
 	unsigned *ptr = tags;
-	unsigned pcount = 0;
 	void (*entry) (unsigned, unsigned, unsigned *) = kernel;
 	struct ptable *ptable;
 	int cmdline_len = 0;
 	bool have_cmdline = 0;
+	char* t_cmdline = target_get_cmdline();
+	char* cmd = NULL;
+
 
 	/* CORE */
 	*ptr++ = 2;
@@ -101,45 +103,30 @@ void boot_linux(void *kernel, unsigned *tags,
 
 	ptr = target_atag_mem(ptr);
 
-	if (!target_is_emmc_boot()) {
-		/* Skip NAND partition ATAGS for eMMC boot */
-		if ((ptable = flash_get_ptable()) && (ptable->count != 0)) {
-			int i;
-			for (i = 0; i < ptable->count; i++) {
-				struct ptentry *ptn;
-				ptn = ptable_get(ptable, i);
-				if (ptn->type == TYPE_APPS_PARTITION)
-					pcount++;
-			}
-			*ptr++ = 2 + (pcount * (sizeof(struct atag_ptbl_entry) /
-						sizeof(unsigned)));
-			*ptr++ = 0x4d534d70;
-			for (i = 0; i < ptable->count; ++i)
-				ptentry_to_tag(&ptr, ptable_get(ptable, i));
-		}
+	if ((ptable = flash_get_ptable()) && (ptable->count != 0)) {
+		int i;
+		*ptr++ = 2 + (ptable->count * (sizeof(struct atag_ptbl_entry) /
+					sizeof(unsigned)));
+		*ptr++ = 0x4d534d70;
+		for (i = 0; i < ptable->count; ++i)
+			ptentry_to_tag(&ptr, ptable_get(ptable, i));
 	}
-
-	char* t_cmdline = target_get_cmdline();
-	char* cmd = NULL;
 
 	if (cmdline && cmdline[0]) {
 		cmd = cmdline;
-		cmdline_len = strlen(cmdline);
 	}
 	else if (t_cmdline && t_cmdline[0]) {
 		cmd = t_cmdline;
-		cmdline_len = strlen(t_cmdline);
 	}
+	cmdline_len = strlen(cmd);
 
 	if (cmdline_len > 0) {
-		const char *src = cmd;
 		unsigned n;
 		/* include terminating 0 and round up to a word multiple */
 		n = (cmdline_len + 4) & (~3);
 		*ptr++ = (n / 4) + 2;
 		*ptr++ = 0x54410009;
-		char *dst = (char *)ptr;
-		while ((*dst++ = *src++));
+		memcpy(ptr, cmd, cmdline_len);
 		ptr += (n / 4);
 	}
 
@@ -153,6 +140,7 @@ void boot_linux(void *kernel, unsigned *tags,
 		dprintf(INFO, "cmdline: %s\n", cmd);
 
 	enter_critical_section();
+	//platform_uninit_timer();
 	platform_exit();
 	arch_disable_cache(UCACHE);
 	arch_disable_mmu();
@@ -416,6 +404,12 @@ static void boot_recovery(void) {
 	boot_nand();
 }
 
+static void dump_ramconsole(void) {
+	for (char* c = 0x8e0000; c != 0x900000; c++) {
+		fbcon_putc(*c);
+	}
+}
+
 static struct menu_entry {
 	char* title;
 	void (*callback)(void);
@@ -458,7 +452,7 @@ static struct menu_entry {
 	},
 	{
 		"Dump ramconsole",
-		NULL,
+		dump_ramconsole,
 		false,
 	}
 };
