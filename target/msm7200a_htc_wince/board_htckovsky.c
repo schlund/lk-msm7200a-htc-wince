@@ -598,7 +598,7 @@ static void htckovsky_init(void) {
 }
 
 static void htckovsky_exit(void) {
-//	htckovsky_set_light(0);
+	htckovsky_set_color_leds(0, 1, 1);
 //	htckovsky_display_exit();
 }
 
