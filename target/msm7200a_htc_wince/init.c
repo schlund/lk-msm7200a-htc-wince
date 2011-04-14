@@ -270,23 +270,18 @@ void target_init(void)
 
 static void msm_prepare_clocks(void) {
 	static int clocks_off[] = {
-		VFE_CLK,
-		VDC_CLK,
 		MDC_CLK,
-		SDAC_CLK,
 		SDC1_CLK,
 		SDC2_CLK,
 		SDC3_CLK,
 		SDC4_CLK,
-		UART1_CLK,
-		UART2_CLK,
-		UART3_CLK,
 		USB_HS_CLK,
 	};
 
 	static int clocks_on[] = {
 		IMEM_CLK,
 		MDP_CLK,
+		PMDH_CLK,
 	};
 
 	for (int i = 0; i < (int)ARRAY_SIZE(clocks_off); i++)
@@ -299,7 +294,7 @@ static void msm_prepare_clocks(void) {
 void target_exit(void) {
 	if (board && board->exit)
 		board->exit();
-//	msm_i2c_remove();
+	msm_i2c_remove();
 	msm_prepare_clocks();
 }
 
