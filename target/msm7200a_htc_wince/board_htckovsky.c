@@ -461,8 +461,8 @@ static void htckovsky_wait_for_charge(void) {
 		else {
 			no_charger_cycles++;
 			htckovsky_set_charger(CHG_OFF);
-			//If no charger connected for 5 seconds and we're low on battery
-			if (no_charger_cycles > 10)
+			//If no charger connected for 6 seconds and we're low on battery
+			if (no_charger_cycles > 3)
 				target_shutdown();
 		}
 		printf("%s: voltage=%d\n", __func__, voltage);
