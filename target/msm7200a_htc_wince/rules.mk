@@ -31,6 +31,7 @@ DEFINES += HEAP_LEN=0x00100000
 DEVS += fbcon
 MODULES += dev/fbcon
 MODULES += dev/keys
+MODULES += dev/battery
 MODULES += lib/ptable
 
 DEFINES += \
@@ -41,7 +42,6 @@ DEFINES += \
 	KERNEL_ADDR=$(KERNEL_ADDR) \
 	RAMDISK_ADDR=$(RAMDISK_ADDR) \
 	SCRATCH_ADDR=$(SCRATCH_ADDR)
-
 
 OBJS += \
 	$(LOCAL_DIR)/init.o \
