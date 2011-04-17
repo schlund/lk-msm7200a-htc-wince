@@ -452,6 +452,8 @@ static void htckovsky_wait_for_charge(void) {
 	uint32_t voltage;
 	uint8_t no_charger_cycles = 0;
 	do {
+		htckovsky_set_charger(CHG_OFF);
+		mdelay(10);
 		voltage = ds2746_read_voltage_mv(0x36);
 		bool power = htckovsky_usb_online();
 		if (power) {
