@@ -45,6 +45,9 @@ int target_is_emmc_boot(void);
 /* prepare the device for reboot */
 void target_exit(void);
 
+/* blocks until the battery is ready */
+void target_wait_for_min_charge(void);
+
 enum mtype target_machtype(void);
 
 enum boot_reason get_boot_reason(void);

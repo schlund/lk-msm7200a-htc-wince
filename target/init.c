@@ -93,3 +93,6 @@ __WEAK unsigned target_baseband()
 {
 	return 0;
 }
+
+__WEAK void target_wait_for_min_charge(void) {
+}

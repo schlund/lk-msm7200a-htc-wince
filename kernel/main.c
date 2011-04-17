@@ -104,10 +104,10 @@ void kmain(void)
 #if (!ENABLE_NANDWRITE)
 	// create a thread to complete system initialization
 	dprintf(SPEW, "creating bootstrap completion thread\n");
-	
+
 	// enable interrupts
 	exit_critical_section();
-	
+
 	thread_resume(thread_create
 		      ("bootstrap2", &bootstrap2, NULL, DEFAULT_PRIORITY,
 		       DEFAULT_STACK_SIZE));
@@ -134,6 +134,10 @@ static int bootstrap2(void *arg)
 	// initialize the target
 	dprintf(SPEW, "initializing target\n");
 	target_init();
+
+	// wait for minimum safe charge level
+	dprintf(SPEW, "waiting for battery to become ready\n");
+	target_wait_for_min_charge();
 
 	dprintf(SPEW, "calling apps_init()\n");
 	apps_init();

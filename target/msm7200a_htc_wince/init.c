@@ -305,7 +305,6 @@ void* target_get_scratch_addr(void) {
 	return (void*)SCRATCH_ADDR;
 }
 
-
 unsigned target_get_scratch_size(void) {
 	if (board && board->scratch_addr)
 		return board->scratch_size;
@@ -324,4 +323,9 @@ char* target_get_cmdline(void) {
 enum mtype target_machtype(void)
 {
 	return mtype;
+}
+
+void target_wait_for_min_charge(void) {
+	if (board && board->wait_for_charge)
+		board->wait_for_charge();
 }
