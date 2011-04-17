@@ -18,6 +18,7 @@
 #include <array.h>
 #include <debug.h>
 #include <reg.h>
+#include <dev/battery/ds2746.h>
 #include <dev/fbcon.h>
 #include <dev/flash.h>
 #include <dev/gpio.h>
@@ -431,7 +432,7 @@ static void msm_hsusb_set_state(int state)
 }
 
 static void htckovsky_set_charger(enum psy_charger_state state) {
-	gpio_set(KOVS100_N_CHG_ENABLE, state != CHG_OFF);
+	gpio_set(KOVS100_N_CHG_ENABLE, state == CHG_OFF);
 }
 
 static bool htckovsky_usb_online(void) {
@@ -443,7 +444,30 @@ static bool htckovsky_ac_online(void) {
 }
 
 static bool htckovsky_want_charging(void) {
-	return true;
+	uint32_t voltage = ds2746_read_voltage_mv(0x36);
+	return voltage < DS2746_HIGH_VOLTAGE;
+}
+
+static void htckovsky_wait_for_charge(void) {
+	uint32_t voltage;
+	uint8_t no_charger_cycles = 0;
+	do {
+		voltage = ds2746_read_voltage_mv(0x36);
+		bool power = htckovsky_usb_online();
+		if (power) {
+			htckovsky_set_charger(CHG_USB_HIGH);
+			no_charger_cycles = 0;
+		}
+		else {
+			no_charger_cycles++;
+			htckovsky_set_charger(CHG_OFF);
+			//If no charger connected for 5 seconds and we're low on battery
+			if (no_charger_cycles > 10)
+				target_shutdown();
+		}
+		printf("%s: voltage=%d\n", __func__, voltage);
+		mdelay(2000);
+	} while (voltage < 3600);
 }
 
 static struct pda_power_supply htckovsky_power_supply = {
@@ -606,6 +630,7 @@ struct msm7k_board htckovsky_board = {
 	.early_init = htckovsky_early_init,
 	.init = htckovsky_init,
 	.exit = htckovsky_exit,
+	.wait_for_charge = htckovsky_wait_for_charge,
 	.cmdline = "fbcon=rotate:2 init=/init physkeyboard=kovsq"
 	" force_cdma=0 hwrotation=180 lcd.density=240"
 	" msmvkeyb_toggle=off",
