@@ -146,7 +146,7 @@ void fbcon_clear(void)
 {
 	enter_critical_section();
 	unsigned short *start = fbcon.config->base;
-	unsigned short * *end =
+	unsigned short *end =
 	fbcon.config->base +
 	fbcon.config->width * fbcon.config->height * (fbcon.config->bpp >> 3);
 	while (start < end) {
