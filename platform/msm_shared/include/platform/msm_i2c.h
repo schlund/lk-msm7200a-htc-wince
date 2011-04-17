@@ -1,6 +1,8 @@
 #ifndef __MSM_I2C_H__
 #define __MSM_I2C_H__
 
+#include <sys/types.h>
+
 #define MSM_I2C_READ_RETRY_TIMES 10
 #define MSM_I2C_WRITE_RETRY_TIMES 10
 
