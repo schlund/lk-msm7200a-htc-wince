@@ -17,7 +17,6 @@ struct msm7k_board {
 	void (*early_init)(void);
 	void (*init)(void);
 	void (*exit)(void);
-	void (*wait_for_charge)(void);
 	void *scratch_addr;
 	unsigned scratch_size;
 	char *cmdline;

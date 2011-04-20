@@ -135,10 +135,6 @@ static int bootstrap2(void *arg)
 	dprintf(SPEW, "initializing target\n");
 	target_init();
 
-	// wait for minimum safe charge level
-	dprintf(SPEW, "waiting for battery to become ready\n");
-	target_wait_for_min_charge();
-
 	dprintf(SPEW, "calling apps_init()\n");
 	apps_init();
 

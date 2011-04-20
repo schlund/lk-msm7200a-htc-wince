@@ -161,9 +161,10 @@ enum boot_markers {
 };
 
 #define LK_BOOTREASON_ADDR 0x800000
+#define SPL_BOOT_REASON_ADDR 0x8105c
 
 enum boot_reason get_boot_reason() {
-	unsigned bootcode = readl(0x8105c);
+	unsigned bootcode = readl(SPL_BOOT_REASON_ADDR);
 	enum boot_reason ret = BOOT_UNKNOWN;
 	switch (bootcode) {
 		case MARK_BUTTON:
@@ -236,19 +237,20 @@ void reboot_device(enum boot_reason reboot_mode)
 			writel(0, LK_BOOTREASON_ADDR + 4);
 			break;
 	}
+	switch (reboot_mode) {
+		case BOOT_CHARGING:
+			writel(MARK_CHARGER, SPL_BOOT_REASON_ADDR);
+			break;
+		default:
+			writel(MARK_SOFTRESET, SPL_BOOT_REASON_ADDR);
+	}
 	platform_exit();
 	dex_reboot();
 }
 
-/* Enable MDP clock just in case...
- * otherwise arm11 will crash if we use mddi while it's disabled
- */
 void target_init(void)
 {
-	dprintf(INFO, "+%s\n", __func__);
 	setup_board();
-	clk_enable(MDP_CLK);
-	clk_enable(PMDH_CLK);
 	if (board && board->early_init)
 		board->early_init();
 	int ret = msm_dex_comm_init();
@@ -256,16 +258,8 @@ void target_init(void)
 	acpu_clock_init();
 	ret = msm_i2c_probe(&i2c_pdata);
 	dprintf(INFO, "I2C init with ret = %d\n", ret);
-
 	if (board && board->init)
 		board->init();
-	dprintf(INFO, "-%s\n", __func__);
-
-	/* call these again to print to framebuffer
-	 * TODO: add console log buffer and print early messages
-	 */
-	setup_board();
-	get_boot_reason();
 }
 
 static void msm_prepare_clocks(void) {
@@ -323,9 +317,4 @@ char* target_get_cmdline(void) {
 enum mtype target_machtype(void)
 {
 	return mtype;
-}
-
-void target_wait_for_min_charge(void) {
-	if (board && board->wait_for_charge)
-		board->wait_for_charge();
 }
