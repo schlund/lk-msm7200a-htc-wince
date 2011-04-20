@@ -16,8 +16,10 @@
  */
 
 #include <array.h>
+#include <bootreason.h>
 #include <debug.h>
 #include <reg.h>
+#include <target.h>
 #include <dev/battery/ds2746.h>
 #include <dev/fbcon.h>
 #include <dev/flash.h>
@@ -459,17 +461,23 @@ static void htckovsky_wait_for_charge(void) {
 		if (power) {
 			htckovsky_set_charger(CHG_USB_HIGH);
 			no_charger_cycles = 0;
+			htckovsky_set_color_leds(0, 1, 0);
 		}
 		else {
 			no_charger_cycles++;
 			htckovsky_set_charger(CHG_OFF);
+			htckovsky_set_color_leds(1, 0, 0);
+
 			//If no charger connected for 6 seconds and we're low on battery
-			if (no_charger_cycles > 3)
+			if (no_charger_cycles > 12) {
 				target_shutdown();
+			}
 		}
 		printf("%s: voltage=%d\n", __func__, voltage);
-		mdelay(2000);
-	} while (voltage < 3600);
+		mdelay(500);
+	} while (voltage < 3650);
+	if (get_boot_reason() == BOOT_CHARGING)
+		reboot_device(BOOT_WARM);
 }
 
 static struct pda_power_supply htckovsky_power_supply = {
@@ -612,10 +620,13 @@ static void htckovsky_early_init(void) {
 }
 
 static void htckovsky_init(void) {
+	if (get_boot_reason() == BOOT_CHARGING) {
+		htckovsky_set_color_leds(1, 1, 0);
+	}
+	htckovsky_wait_for_charge();
+
 	htckovsky_set_key_light(160);
-	mdelay(10);
 	htckovsky_set_color_leds(1, 0, 1);
-	mdelay(20);
 	//set half rate to reduce flicker
 	clk_set_rate(MDP_CLK, 109 * 1000 * 1000);
 	htckovsky_usb_init();
@@ -632,7 +643,6 @@ struct msm7k_board htckovsky_board = {
 	.early_init = htckovsky_early_init,
 	.init = htckovsky_init,
 	.exit = htckovsky_exit,
-	.wait_for_charge = htckovsky_wait_for_charge,
 	.cmdline = "fbcon=rotate:2 init=/init physkeyboard=kovsq"
 	" force_cdma=0 hwrotation=180 lcd.density=240"
 	" msmvkeyb_toggle=off",
