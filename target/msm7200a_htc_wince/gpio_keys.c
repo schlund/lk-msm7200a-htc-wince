@@ -34,7 +34,7 @@ static enum handler_return gpio_key_irq(void *arg)
 		if (state2 != state) {
 //			printf("%s: failed to reach stable state after %d ms\n",
 //					__func__, i * 10);
-			return INT_NO_RESCHEDULE;
+			return INT_RESCHEDULE;
 		}
 	}
 	keys_post_event(key->keycode, state ^ key->active_low);
