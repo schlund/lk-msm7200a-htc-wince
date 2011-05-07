@@ -434,7 +434,16 @@ static void msm_hsusb_set_state(int state)
 }
 
 static void htckovsky_set_charger(enum psy_charger_state state) {
-	gpio_set(KOVS100_N_CHG_ENABLE, state == CHG_OFF);
+	if (state == CHG_OFF) {
+		gpio_set(KOVS100_N_CHG_ENABLE, 1);
+		gpio_set(KOVS100_N_CHG_INHIBIT, 0);
+		gpio_set(KOVS100_CHG_HIGH, 0);
+	}
+	else {
+		gpio_set(KOVS100_N_CHG_ENABLE, 0);
+		gpio_set(KOVS100_N_CHG_INHIBIT, 1);
+		gpio_set(KOVS100_CHG_HIGH, 1);
+	}
 }
 
 static bool htckovsky_usb_online(void) {
@@ -452,11 +461,11 @@ static bool htckovsky_want_charging(void) {
 
 static void htckovsky_wait_for_charge(void) {
 	uint32_t voltage;
+	int current;
 	uint8_t no_charger_cycles = 0;
 	do {
-		htckovsky_set_charger(CHG_OFF);
-		mdelay(10);
 		voltage = ds2746_read_voltage_mv(0x36);
+		current = ds2746_read_current_ma(0x36, 1500);
 		bool power = htckovsky_usb_online();
 		if (power) {
 			htckovsky_set_charger(CHG_USB_HIGH);
@@ -473,9 +482,11 @@ static void htckovsky_wait_for_charge(void) {
 				target_shutdown();
 			}
 		}
-		printf("%s: voltage=%d\n", __func__, voltage);
+		printf("[BAT] voltage=%d current=%d\n", voltage, current);
 		mdelay(500);
-	} while (voltage < 3650);
+		//ok, don't drop charge but instead increase minimum voltage to
+		//compensate for incorrect reading
+	} while (voltage < 3750);
 	if (get_boot_reason() == BOOT_CHARGING)
 		reboot_device(BOOT_WARM);
 }
