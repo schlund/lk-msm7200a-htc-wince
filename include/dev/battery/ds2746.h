@@ -36,6 +36,7 @@
 #define DS2746_CURRENT_ACCUM_RES	645
 #define DS2746_VOLTAGE_RES			2440
 
-uint32_t ds2746_read_voltage_mv(uint8_t address);
+uint16_t ds2746_read_voltage_mv(uint8_t address);
+int16_t ds2746_read_current_ma(uint8_t address, uint16_t resistance);
 
 #endif //__DS2746_H__
