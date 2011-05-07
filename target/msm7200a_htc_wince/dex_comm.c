@@ -25,11 +25,13 @@
 #include <platform/timer.h>
 #include <target/dex_comm.h>
 
-#ifdef DEX_DEBUG
+#if defined(DEX_DEBUG) && DEX_DEBUG
 	#define DDEX(fmt, arg...) dprintf(INFO, "[DEX] %s: " fmt "\n", __FUNCTION__, ## arg)
 #else
 	#define DDEX(fmt, arg...) do {} while (0)
 #endif
+
+#define EDEX(fmt, arg...) dprintf(ERROR, "[DEX] %s: " fmt "\n", __FUNCTION__, ## arg)
 
 #define MSM_A2M_INT(n)	(MSM_CSR_BASE + 0x400 + (n) * 4)
 #define DEX_COMMAND		0x00
@@ -92,7 +94,7 @@ int msm_dex_comm(struct msm_dex_command * in, unsigned *out)
 
 	if ( ! dex_timeout )
 	{
-		dprintf(WARNING "%s: DEX cmd timed out. status=0x%x, A2Mcntr=%x, M2Acntr=%x\n",
+		EDEX("%s: DEX cmd timed out. status=0x%x, A2Mcntr=%x, M2Acntr=%x\n",
 			__func__, readl(base + DEX_STATUS), num, readl(base + DEX_SERIAL_CHECK));
 		goto end;
 	}
@@ -111,7 +113,7 @@ int msm_dex_comm(struct msm_dex_command * in, unsigned *out)
 	{
 		if ( status & DEX_STATUS_FAIL )
 		{
-			DDEX("DEX cmd failed; status=%x, result=%x",
+			EDEX("DEX cmd failed; status=%x, result=%x",
 				readl(base + DEX_STATUS),
 				readl(base + DEX_DATA_RESULT));
 
