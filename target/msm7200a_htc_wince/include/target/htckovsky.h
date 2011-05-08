@@ -41,7 +41,7 @@
 #define KOVS100_SPK_UNK_2	64
 #define KOVS100_SPK_AMP		65
 #define KOVS100_HP_AMP		66
-#define KOVS100_CHARGER_FULL	67
+#define KOVS100_N_CHG_INHIBIT	67
 #define KOVS100_MDDI_PWR	82
 #define KOVS100_POWER_KEY	83
 #define KOVS100_N_SD_STATUS	94
@@ -53,6 +53,7 @@
 #define KOVS100_USB_POWER_PHY		105
 #define KOVS100_VCM_PD		107
 #define KOVS100_UART2DM_TX	108
+#define KOVS100_CHG_HIGH 109
 
 
 extern struct msm7k_board htckovsky_board;
