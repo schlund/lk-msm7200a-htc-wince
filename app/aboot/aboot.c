@@ -410,148 +410,6 @@ static void dump_ramconsole(void) {
 	}
 }
 
-static struct menu_entry {
-	char* title;
-	void (*callback)(void);
-	bool oneshot;
-} menu[] = {
-	{
-		"Fastboot mode",
-		enter_fastboot,
-		true,
-	},
-	{
-		"Boot from NAND",
-		boot_nand,
-		true,
-	},
-	{
-		"Boot into recovery",
-		boot_recovery,
-		true,
-	},
-	{
-		"Reboot",
-		reboot,
-		false,
-	},
-	{
-		"Reboot to bootloader",
-		reboot_bootloader,
-		false,
-	},
-	{
-		"Shutdown",
-		target_shutdown,
-		false,
-	},
-	{
-		"Charge mode",
-		NULL,
-		false,
-	},
-	{
-		"Dump ramconsole",
-		dump_ramconsole,
-		false,
-	}
-};
-
-enum menu_action {
-	MENU_UP,
-	MENU_DOWN,
-	MENU_SELECT,
-	MENU_REDRAW,
-};
-
-static unsigned curr_menu_idx = 0;
-
-static bool menu_update(enum menu_action cmd) {
-	unsigned idx = 0;
-	enter_critical_section();
-	switch (cmd) {
-		case MENU_UP:
-			curr_menu_idx = (curr_menu_idx + 1) % ARRAY_SIZE(menu);
-			break;
-		case MENU_DOWN:
-			curr_menu_idx = curr_menu_idx > 0 ?
-				curr_menu_idx - 1 : ARRAY_SIZE(menu) - 1;
-			break;
-		case MENU_SELECT:
-			goto callback;
-		case MENU_REDRAW:
-			break;
-	}
-	idx = curr_menu_idx;
-	exit_critical_section();
-
-	fbcon_clear();
-	for (unsigned i = 0; i < ARRAY_SIZE(menu); i++) {
-		if (idx == i) {
-			printf(">>>%d: %s<<<\n", i, menu[i].title);
-		}
-		else {
-			printf("%d: %s\n", i, menu[i].title);
-		}
-	}
-	return false;
-
-callback:
-	idx = curr_menu_idx;
-	exit_critical_section();
-	if (menu[idx].callback) {
-		menu[idx].callback();
-		return menu[idx].oneshot;
-	}
-	else {
-		printf("No callback for menu item %d\n", curr_menu_idx);
-	}
-	return false;
-}
-
-static void handle_keypad(void) {
-	int ret = 0;
-	uint16_t last_code = 0;
-	uint16_t code = 0;
-	int16_t value = 0;
-	int16_t last_value = -1;
-
-	menu_update(MENU_REDRAW);
-	while (!(ret = keys_wait_event_timeout(&code, &value, 0))) {
-		//do not handle both release and keypress
-		if (last_code == code && last_value != value)
-			continue;
-
-		last_code = code;
-		last_value = value;
-
-		switch (code) {
-			case KEY_UP:
-			case KEY_VOLUMEUP:
-				menu_update(MENU_UP);
-				//printf("Key up\n");
-				break;
-
-			case KEY_DOWN:
-			case KEY_VOLUMEDOWN:
-				menu_update(MENU_DOWN);
-				//printf("Key down\n");
-				break;
-
-			case KEY_ENTER:
-			case KEY_POWER:
-				if (menu_update(MENU_SELECT))
-					return;
-				//printf("Key enter\n");
-				break;
-
-			default:
-				break;
-		}
-		//printf("[KEY]: code=%d value=%d\n", code, value);
-	}
-}
-
 void aboot_init(const struct app_descriptor *app)
 {
 	page_size = flash_page_size();
@@ -569,19 +427,27 @@ void aboot_init(const struct app_descriptor *app)
 			break;
 	}
 
-	uint16_t code = 0;
-	int16_t value = 0;
-	int ret;
-
-	printf("press any key to enter boot menu...\n");
-	ret = keys_wait_event_timeout(&code, &value, 2500);
-	if (ret) {
-		printf("no user choice, defaulting to nand boot\n");
-		boot_nand();
-		return;
+	printf("press POWER for FASTBOOT or halfpress CAMERA for RECOVERY modes\n");
+	for (int tmout = 0; tmout < 3500; tmout += 50) 
+	{
+		int8_t pwr = keys_get_state(KEY_POWER);
+		int8_t cmr = keys_get_state(KEY_UP);
+		
+		if (pwr)
+		{	
+			fbcon_clear();
+			printf("ENTERING FASTBOOT MODE\n");
+			enter_fastboot();
+		}
+		else if (cmr)
+		{
+			fbcon_clear();
+			printf("ENTERING RECOVERY MODE\n");
+			boot_recovery();
+		}
+		thread_sleep(50);
 	}
-
-	handle_keypad();
+	printf("no user choise, defaulting to nand boot\n");
 }
 
 APP_START(aboot)

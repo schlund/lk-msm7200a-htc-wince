@@ -76,25 +76,3 @@ int keys_get_state(uint16_t code)
 	}
 	return bitmap_test(key_bitmap, code);
 }
-
-int keys_wait_event_timeout(uint16_t *code, int16_t* value, time_t timeout) {
-	if (!value || !code)
-		return ERR_INVALID_ARGS;
-
-	status_t ret = NO_ERROR;
-	if (timeout)
-		ret = event_wait_timeout(&input_evt, timeout);
-	else
-		ret = event_wait(&input_evt);
-
-	event_unsignal(&input_evt);
-	if (ret == NO_ERROR) {
-		enter_critical_section();
-		*code = last_key;
-		*value = keys_get_state(last_key);
-		exit_critical_section();
-		return 0;
-	}
-
-	return ERROR;
-}

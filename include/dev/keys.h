@@ -92,6 +92,5 @@
 void keys_init(void);
 void keys_post_event(uint16_t code, int16_t value);
 int keys_get_state(uint16_t code);
-int keys_wait_event_timeout(uint16_t *code, int16_t* value, time_t timeout);
 
 #endif /* __DEV_KEYS_H */
