@@ -438,16 +438,19 @@ void aboot_init(const struct app_descriptor *app)
 			fbcon_clear();
 			printf("ENTERING FASTBOOT MODE\n");
 			enter_fastboot();
+			return;
 		}
 		else if (cmr)
 		{
 			fbcon_clear();
 			printf("ENTERING RECOVERY MODE\n");
 			boot_recovery();
+			return;
 		}
 		thread_sleep(50);
 	}
 	printf("no user choise, defaulting to nand boot\n");
+	boot_nand();
 }
 
 APP_START(aboot)
