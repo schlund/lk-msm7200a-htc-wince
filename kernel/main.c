@@ -28,7 +28,6 @@
 #include <app.h>
 #include <arch.h>
 #include <platform.h>
-#include <dev/keys.h>
 #include <target.h>
 #include <lib/heap.h>
 #include <kernel/thread.h>
@@ -99,7 +98,6 @@ void kmain(void)
 	// initialize kernel timers
 	dprintf(SPEW, "initializing timers\n");
 	timer_init();
-	keys_init();
 
 #if (!ENABLE_NANDWRITE)
 	// create a thread to complete system initialization

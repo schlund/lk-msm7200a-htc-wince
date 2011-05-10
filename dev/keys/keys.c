@@ -38,13 +38,11 @@
 #include <sys/types.h>
 
 static unsigned long key_bitmap[BITMAP_NUM_WORDS(MAX_KEYS)];
-static event_t input_evt;
 static uint16_t last_key = 0;
 
 void keys_init(void)
 {
 	memset(key_bitmap, 0, sizeof(key_bitmap));
-	event_init(&input_evt, false, 0);
 }
 
 void keys_post_event(uint16_t code, int16_t value)
@@ -65,7 +63,6 @@ void keys_post_event(uint16_t code, int16_t value)
 	exit_critical_section();
 
 	//dprintf(INFO, "key state change: %d %d\n", code, value);
-	event_signal(&input_evt, false);
 }
 
 int keys_get_state(uint16_t code)
