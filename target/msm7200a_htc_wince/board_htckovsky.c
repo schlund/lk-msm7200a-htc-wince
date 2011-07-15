@@ -555,43 +555,81 @@ static void htckovsky_gpio_keys_init(void) {
  */
 
 #define HTCKOVSKY_FLASH_OFFSET 321
-static struct ptable flash_ptable;
-//static struct ptentry htckovsky_part_list[] = {
-//	{
-//		.start = 0,
-//		.length = 8,
-//		.name = "LK",
-//		.type = TYPE_APPS_PARTITION,
-//		.perm = PERM_WRITEABLE,
-//	},
-//	{
-//		.start = 8,
-//		.length = 72,
-//		.name = "boot",
-//		.type = TYPE_APPS_PARTITION,
-//		.perm = PERM_WRITEABLE,
-//	},
-//	{
-//		.start = 80,
-//		.length = 0xe5f,
-//		.name = "other",
-//		.type = TYPE_APPS_PARTITION,
-//		.perm = PERM_WRITEABLE,
-//	},
-//};
+#define HTCKOVSKY_FLASH_SIZE 0x1000
 
+#define HTCKOVSKY_FLASH_RECOVERY_START 0
+#define HTCKOVSKY_FLASH_RECOVERY_SIZE 0x50
+
+#define HTCKOVSKY_FLASH_MISC_START (HTCKOVSKY_FLASH_RECOVERY_START + \
+	HTCKOVSKY_FLASH_RECOVERY_SIZE)
+#define HTCKOVSKY_FLASH_MISC_SIZE 5
+
+#define HTCKOVSKY_FLASH_BOOT_START (HTCKOVSKY_FLASH_MISC_START + \
+	HTCKOVSKY_FLASH_MISC_SIZE)
+#define HTCKOVSKY_FLASH_BOOT_SIZE 0x30
+
+#define HTCKOVSKY_FLASH_SYS_START (HTCKOVSKY_FLASH_BOOT_START + \
+	HTCKOVSKY_FLASH_BOOT_SIZE)
+#define HTCKOVSKY_FLASH_SYS_SIZE 0x3c0
+
+#define HTCKOVSKY_FLASH_DATA_START (HTCKOVSKY_FLASH_SYS_START + \
+	HTCKOVSKY_FLASH_SYS_SIZE)
+#define HTCKOVSKY_FLASH_DATA_SIZE 0xa00
+
+#define HTCKOVSKY_FLASH_CACHE_SIZE 0x80
+#define HTCKOVSKY_FLASH_CACHE_START (HTCKOVSKY_FLASH_SIZE - \
+	HTCKOVSKY_FLASH_CACHE_SIZE)
+
+#if HTCKOVSKY_FLASH_CACHE_START < HTCKOVSKY_FLASH_OFFSET
+	#error Cache partition starts in protected zone
+#endif
+
+#if (HTCKOVSKY_FLASH_DATA_START + HTCKOVSKY_FLASH_DATA_SIZE) > \
+	HTCKOVSKY_FLASH_CACHE_START
+	#error Incorrect flash layout. Verify partition sizes manually
+#endif
+
+static struct ptable flash_ptable;
 static struct ptentry htckovsky_part_list[] = {
 	{
-		.start = 0xe17,
-		.length = 80,
+		.start = HTCKOVSKY_FLASH_RECOVERY_START,
+		.length = HTCKOVSKY_FLASH_RECOVERY_SIZE,
 		.name = "recovery",
 		.type = TYPE_APPS_PARTITION,
 		.perm = PERM_WRITEABLE,
 	},
 	{
-		.start = 0xe67,
-		.length = 72,
+		.start = HTCKOVSKY_FLASH_MISC_START,
+		.length = HTCKOVSKY_FLASH_MISC_SIZE,
+		.name = "misc",
+		.type = TYPE_APPS_PARTITION,
+		.perm = PERM_WRITEABLE,
+	},
+	{
+		.start = HTCKOVSKY_FLASH_BOOT_START,
+		.length = HTCKOVSKY_FLASH_BOOT_SIZE,
 		.name = "boot",
+		.type = TYPE_APPS_PARTITION,
+		.perm = PERM_WRITEABLE,
+	},
+	{
+		.start = HTCKOVSKY_FLASH_SYS_START,
+		.length = HTCKOVSKY_FLASH_SYS_SIZE,
+		.name = "system",
+		.type = TYPE_APPS_PARTITION,
+		.perm = PERM_WRITEABLE,
+	},
+	{
+		.start = HTCKOVSKY_FLASH_DATA_START,
+		.length = HTCKOVSKY_FLASH_DATA_SIZE,
+		.name = "userdata",
+		.type = TYPE_APPS_PARTITION,
+		.perm = PERM_WRITEABLE,
+	},
+	{
+		.start = HTCKOVSKY_FLASH_CACHE_START,
+		.length = HTCKOVSKY_FLASH_CACHE_SIZE,
+		.name = "cache",
 		.type = TYPE_APPS_PARTITION,
 		.perm = PERM_WRITEABLE,
 	},
