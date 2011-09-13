@@ -50,4 +50,5 @@ OBJS += \
 	$(LOCAL_DIR)/msm7200a_hsusb.o \
 	$(LOCAL_DIR)/gpio_keys.o \
 	$(LOCAL_DIR)/dex_comm.o \
+	$(LOCAL_DIR)/dex_vreg.o \
 	$(LOCAL_DIR)/atags.o
