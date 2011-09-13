@@ -43,11 +43,34 @@
 
 #define DEX_TIMEOUT (10000000) /* 10s in microseconds */
 
+#define DEX_INIT_DONE (MSM_SHARED_BASE + 0xfc13c)
+
 static mutex_t dex_mutex;
 
 static inline void notify_other_dex_comm(void)
 {
 	writel(1, MSM_A2M_INT(6));
+}
+
+static void init_dex_locked(void) {
+	unsigned base = (unsigned)(MSM_SHARED_BASE + 0xfc100);
+
+	if (readl(DEX_INIT_DONE)) {
+		return;
+	}
+
+	writel(0, base + DEX_DATA);
+	writel(0, base + DEX_DATA_RESULT);
+	writel(0, base + DEX_SERIAL);
+	writel(0, base + DEX_SERIAL_CHECK);
+	writel(0, base + DEX_STATUS);
+	
+	int status = 0;
+	while (!(status = readl(DEX_INIT_DONE))) {
+		dprintf(INFO, "[DEX] waiting for ARM9... state = %d\n", status);
+		mdelay(500);
+	}
+	dprintf(INFO, "%s: WinCE DEX initialized.\n", __func__);
 }
 
 int msm_dex_comm(struct msm_dex_command * in, unsigned *out)
@@ -59,6 +82,8 @@ int msm_dex_comm(struct msm_dex_command * in, unsigned *out)
 	unsigned base_cmd, base_status;
 
 	mutex_acquire(&dex_mutex);
+
+	init_dex_locked();
 
 	DDEX("waiting for modem; command=0x%02x data=0x%x", in->cmd, in->data);
 
@@ -142,27 +167,12 @@ end:
 
 int msm_dex_comm_init()
 {
-	unsigned base = (unsigned)(MSM_SHARED_BASE + 0xfc100);
 	mutex_init(&dex_mutex);
-
 	mutex_acquire(&dex_mutex);
 
-	writel(0, base + DEX_DATA);
-	writel(0, base + DEX_DATA_RESULT);
-	writel(0, base + DEX_SERIAL);
-	writel(0, base + DEX_SERIAL_CHECK);
-	writel(0, base + DEX_STATUS);
-
-	int status = 0;
-	while (!(status = readl(MSM_SHARED_BASE + 0xfc13c))) {
-		dprintf(INFO, "[DEX] waiting for ARM9... state = %d\n", status);
-		mdelay(500);
-	}
+	init_dex_locked();
 
 	mutex_release(&dex_mutex);
-
-	dprintf(INFO, "%s: WinCE DEX initialized.\n", __func__);
-
 	return 0;
 }
 
