@@ -36,6 +36,7 @@
 #include <platform/hsusb.h>
 #include <target/dynboard.h>
 #include <target/msm7200a_hsusb.h>
+#include <target/dex_vreg.h>
 #include <target/dex_comm.h>
 #include <target/htckovsky.h>
 /******************************************************************************
@@ -304,6 +305,10 @@ static void htckovsky_process_mddi_table(struct mddi_table *table, size_t count)
 	}
 }
 
+#define KOVS110_VREG_18V 7
+#define KOVS110_VREG_26V 18
+#define KOVS110_VREG_AUX2 22
+
 static void htckovsky_mddi_bridge_reset(int reset_asserted) {
 		if (reset_asserted) {
 				gpio_set(KOVS100_MDDI_PWR, 0);
@@ -321,10 +326,20 @@ static void htckovsky_mddi_power_client(int on) {
 	return;
 	if (on) {
 		gpio_set(KOVS100_LCD_PWR, 1);
+		
+		dex_vreg_enable(KOVS110_VREG_18V);
+		dex_vreg_enable(KOVS110_VREG_26V);
+		dex_vreg_enable(KOVS110_VREG_AUX2);
+
 		mdelay(5);
 		htckovsky_mddi_bridge_reset(1);
 	} else {
 		htckovsky_mddi_bridge_reset(0);
+		
+		dex_vreg_disable(KOVS110_VREG_AUX2);
+		dex_vreg_disable(KOVS110_VREG_26V);
+		dex_vreg_disable(KOVS110_VREG_18V);
+
 		gpio_set(KOVS100_LCD_PWR, 0);
 		mdelay(10);
 	}
