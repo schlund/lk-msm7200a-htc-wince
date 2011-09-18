@@ -710,6 +710,7 @@ struct msm7k_board htckovsky_board = {
 	.init = htckovsky_init,
 	.exit = htckovsky_exit,
 	.cmdline = "fbcon=rotate:2 init=/init physkeyboard=kovsq"
+	"smd_rpcrouter.hot_boot=1"
 	" force_cdma=0 hwrotation=180 lcd.density=240"
 	" msmvkeyb_toggle=off",
 };
