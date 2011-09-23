@@ -366,6 +366,9 @@ void cmd_reboot_bootloader(const char *arg, void *data, unsigned sz)
 }
 
 static void enter_fastboot(void) {
+	fbcon_clear();
+	printf("ENTERING FASTBOOT MODE\n");
+	
 	fastboot_register("flash:", cmd_flash);
 	fastboot_register("erase:", cmd_erase);
 
@@ -400,6 +403,9 @@ static void boot_nand(void) {
 }
 
 static void boot_recovery(void) {
+	fbcon_clear();
+	printf("ENTERING RECOVERY MODE\n");
+	
 	boot_into_recovery = 1;
 	boot_nand();
 }
@@ -420,8 +426,7 @@ void aboot_init(const struct app_descriptor *app)
 			enter_fastboot();
 			return;
 		case BOOT_RECOVERY:
-			boot_into_recovery = 1;
-			boot_nand();
+			boot_recovery();
 			return;
 		default:
 			break;
@@ -435,15 +440,11 @@ void aboot_init(const struct app_descriptor *app)
 		
 		if (pwr)
 		{	
-			fbcon_clear();
-			printf("ENTERING FASTBOOT MODE\n");
 			enter_fastboot();
 			return;
 		}
 		else if (cmr)
 		{
-			fbcon_clear();
-			printf("ENTERING RECOVERY MODE\n");
 			boot_recovery();
 			return;
 		}
