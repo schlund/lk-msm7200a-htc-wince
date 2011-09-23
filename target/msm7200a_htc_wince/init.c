@@ -160,7 +160,7 @@ enum boot_markers {
 	MARK_LK_TAG = 0x504f4f50,
 };
 
-#define LK_BOOTREASON_ADDR 0x800000
+#define LK_BOOTREASON_ADDR 0x8dfff0
 #define SPL_BOOT_REASON_ADDR 0x8105c
 
 enum boot_reason get_boot_reason() {
