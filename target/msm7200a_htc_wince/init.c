@@ -198,7 +198,7 @@ enum boot_reason get_boot_reason() {
 
 	unsigned sign = readl(LK_BOOTREASON_ADDR);
 	unsigned xsign = readl(LK_BOOTREASON_ADDR + 4);
-	if ((sign ^ xsign) == MARK_LK_TAG)
+	if ((sign ^ xsign) == MARK_LK_TAG) {
 		switch (sign) {
 			case MARK_FASTBOOT:
 			dprintf(INFO, "Found fastboot marker\n");
@@ -210,6 +210,9 @@ enum boot_reason get_boot_reason() {
 			ret = BOOT_RECOVERY;
 			break;
 		}
+		writel(0, LK_BOOTREASON_ADDR);
+		writel(0, LK_BOOTREASON_ADDR + 4);
+	}
 	return ret;
 }
 
