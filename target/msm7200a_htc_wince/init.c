@@ -168,28 +168,28 @@ enum boot_reason get_boot_reason() {
 	enum boot_reason ret = BOOT_UNKNOWN;
 	switch (bootcode) {
 		case MARK_BUTTON:
-			dprintf(INFO, "Boot reason: power button\n");
 			ret = BOOT_COLD;
+			dprintf(INFO, "Boot reason: power button\n");
 			break;
 		case MARK_CHARGER:
-			dprintf(INFO, "Boot reason: power up for charging\n");
 			ret = BOOT_CHARGING;
+			dprintf(INFO, "Boot reason: power up for charging\n");
 			break;
 		case MARK_BATTERY:
-			dprintf(INFO, "Boot reason: no battery before\n");
 			ret = BOOT_BATTERY;
+			dprintf(INFO, "Boot reason: no battery before\n");
 			break;
 		case MARK_OFF:
-			dprintf(INFO, "Boot reason: off soft reset\n");
 			ret = BOOT_UNEXPECTED;
+			dprintf(INFO, "Boot reason: off soft reset\n");
 			break;
 		case MARK_RESET:
-			dprintf(INFO, "Boot reason: reset\n");
 			ret = BOOT_WARM;
+			dprintf(INFO, "Boot reason: reset\n");
 			break;
 		case MARK_SOFTRESET:
-			dprintf(INFO, "Boot reason: soft reset\n");
 			ret = BOOT_WARM;
+			dprintf(INFO, "Boot reason: soft reset\n");
 			break;
 
 		default:
@@ -202,16 +202,12 @@ enum boot_reason get_boot_reason() {
 		switch (sign) {
 			case MARK_FASTBOOT:
 			dprintf(INFO, "Found fastboot marker\n");
-			ret = BOOT_FASTBOOT;
-			break;
+			return BOOT_FASTBOOT;
 
 			case MARK_RECOVERY:
 			dprintf(INFO, "Found recovery marker\n");
-			ret = BOOT_RECOVERY;
-			break;
+			return BOOT_RECOVERY;
 		}
-		writel(0, LK_BOOTREASON_ADDR);
-		writel(0, LK_BOOTREASON_ADDR + 4);
 	}
 	return ret;
 }
@@ -293,6 +289,8 @@ void target_exit(void) {
 		board->exit();
 	msm_i2c_remove();
 	msm_prepare_clocks();
+	writel(0, LK_BOOTREASON_ADDR);
+	writel(0, LK_BOOTREASON_ADDR + 4);
 }
 
 void* target_get_scratch_addr(void) {
