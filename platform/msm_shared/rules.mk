@@ -10,31 +10,12 @@ OBJS += \
 	$(LOCAL_DIR)/hsusb.o \
 	$(LOCAL_DIR)/nand.o
 
-ifneq ($(PLATFORM),msm7200a)
-	OBJS += $(LOCAL_DIR)/proc_comm.o \
-	$(LOCAL_DIR)/smem.o \
-	$(LOCAL_DIR)/smem_ptable.o \
-	$(LOCAL_DIR)/jtag_hook.o \
-	$(LOCAL_DIR)/jtag.o \
-	$(LOCAL_DIR)/lcdc.o
-endif
-
 ifeq ($(PLATFORM),msm7200a)
 		OBJS += $(LOCAL_DIR)/msm_i2c.o
 endif
 
-ifeq ($(PLATFORM),msm8x60)
-        OBJS += $(LOCAL_DIR)/uart.o
-	OBJS += $(LOCAL_DIR)/mipi_dsi.o \
-	        $(LOCAL_DIR)/i2c_qup.o
+ifeq ($(PLATFORM),msm7227)
+		OBJS += $(LOCAL_DIR)/msm_i2c.o \
+		$(LOCAL_DIR)/proc_comm.o
 endif
 
-ifeq ($(PLATFORM),msm8x60)
-        OBJS += $(LOCAL_DIR)/uart_dm.o
-endif
-
-ifeq ($(PLATFORM),msm7x30)
-        OBJS += $(LOCAL_DIR)/uart.o
-	OBJS += $(LOCAL_DIR)/crypto_eng.o \
-	        $(LOCAL_DIR)/crypto_hash.o
-endif
