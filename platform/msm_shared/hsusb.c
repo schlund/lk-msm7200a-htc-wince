@@ -607,6 +607,9 @@ static void udc_reset(void) {
 	//arch_clean_invalidate_cache_range(epts, 32 * sizeof(struct ept_queue_head));
 	writel((unsigned)epts, USB_ENDPOINTLISTADDR);
 
+	ulpi_write(0x1d, 0x0d);
+	ulpi_write(0x1d, 0x10);
+
 	writel(0xffffffff, USB_ENDPTFLUSH);
 	thread_sleep(20);
 }
