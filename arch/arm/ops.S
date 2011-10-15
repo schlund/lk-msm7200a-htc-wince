@@ -157,7 +157,7 @@ FUNCTION(atomic_or)
 FUNCTION(arch_idle)
 #if ARM_CPU_CORTEX_A8
 	.word 0xe320f003 /* wfi */
-#elif PLATFORM_MSM7K || PLATFORM_MSM7200A
+#elif PLATFORM_MSM7227 || PLATFORM_MSM7200A
 	mrc     p15, 0, r1, c1, c0, 0    /* read current CR    */ 
 	bic     r0, r1, #(1 << 2)        /* clear dcache bit   */
 	bic     r0, r0, #(1 << 12)       /* clear icache bit   */

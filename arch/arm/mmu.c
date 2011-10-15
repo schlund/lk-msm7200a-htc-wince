@@ -49,7 +49,7 @@ void arm_mmu_map_section(addr_t paddr, addr_t vaddr, uint flags)
 	uint CB;
 	uint TEX = 0;
 
-#if defined(PLATFORM_MSM7K) || defined(PLATFORM_MSM7200A)
+#if defined(PLATFORM_MSM7227) || defined(PLATFORM_MSM7200A)
 #warning "A warning to let you know peripheral port is open"
 	if ((paddr >= 0x88000000) && (paddr < 0xD0000000)) {
 		/* peripherals in the 0x88000000 - 0xD0000000 range must
