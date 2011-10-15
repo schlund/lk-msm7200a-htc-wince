@@ -1,2 +1,2 @@
-build-msm7200a_htc_wince
-build.sh
+build-*
+*.sh
