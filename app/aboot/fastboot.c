@@ -217,6 +217,7 @@ static int usb_write(void *buf, unsigned len)
 	return req->length;
 
  oops:
+	printf("[fastboot] %s: oops\n", __func__);
 	fastboot_state = STATE_ERROR;
 	return -1;
 }
@@ -225,8 +226,8 @@ void fastboot_ack(const char *code, const char *reason)
 {
 	char response[64];
 
-	if (fastboot_state != STATE_COMMAND)
-		return;
+//	if (fastboot_state != STATE_COMMAND)
+//		return;
 
 	if (reason == 0)
 		reason = "";
