@@ -61,10 +61,8 @@ int msm_proc_comm(unsigned cmd, unsigned *data1, unsigned *data2)
 	}
 
 	writel(cmd, APP_COMMAND);
-	if (data1)
-		writel(*data1, APP_DATA1);
-	if (data2)
-		writel(*data2, APP_DATA2);
+	writel(data1 ? *data1 : 0, APP_DATA1);
+	writel(data2 ? *data2 : 0, APP_DATA2);
 
 	notify_other_proc_comm();
 	while (readl(APP_COMMAND) != PCOM_CMD_DONE) {
