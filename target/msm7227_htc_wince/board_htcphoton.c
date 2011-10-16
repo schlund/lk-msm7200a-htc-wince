@@ -46,6 +46,7 @@ static void htcphoton_display_init(void)
 {
 	struct fbcon_config* fb_config = mddi_init(&htcphoton_mddi_pdata);
 	ASSERT(fb_config);
+	fb_config->rotation = ROTATE_180;
 	fbcon_setup(fb_config);
 }
 
@@ -57,23 +58,15 @@ static void htcphoton_display_exit(void) {
 /******************************************************************************
  * USB
  *****************************************************************************/
-static void htcphoton_usb_disable(void)
-{
-}
-
-static void htcphoton_usb_enable(void)
-{
-	msm_proc_comm(PCOM_MSM_HSUSB_PHY_RESET, 0, 0);
-}
-
 static void msm_hsusb_set_state(int state)
 {
 	if (state) {
-		htcphoton_usb_enable();
+		msm_proc_comm(PCOM_MSM_HSUSB_PHY_RESET, 0, 0);	
 	}
 }
 
 static void htcphoton_set_charger(enum psy_charger_state state) {
+	return;
 	if (state == CHG_OFF) {
 		gpio_set(PHOTON_FAST_CHARGER_DIS, 1);
 		gpio_set(PHOTON_FAST_CHARGER_EN, 0);
@@ -89,7 +82,7 @@ static bool htcphoton_usb_online(void) {
 }
 
 static bool htcphoton_ac_online(void) {
-	return !gpio_get(PHOTON_GPIO_CHARGE_EN_N);
+	return 0;//!gpio_get(PHOTON_GPIO_CHARGE_EN_N);
 }
 
 static bool htcphoton_want_charging(void) {
@@ -136,6 +129,8 @@ static void htcphoton_usb_init(void) {
  * and the rest as imgfs or uldr and correct partitions offsets
  *
  */
+
+//0x02_84_36_AC
 
 #define HTCPHOTON_RESERVED_SECTORS 321
 #define HTCPHOTON_FLASH_SIZE 0x1000
@@ -257,7 +252,7 @@ static void htcphoton_early_init(void) {
 
 static void htcphoton_init(void) {
 	htcphoton_usb_init();
-	htcphoton_nand_init();
+	//htcphoton_nand_init();
 }
 
 struct msm7k_board htcphoton_board = {
