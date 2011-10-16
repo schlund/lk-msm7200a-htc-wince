@@ -123,12 +123,16 @@ void fastboot_publish(const char *name, const char *value)
 	}
 }
 
+#define USB_BUF_SZ 4096
+
 static event_t usb_online;
-static event_t txn_done;
-static unsigned char buffer[4096];
+static event_t tx_done;
+static event_t rx_done;
+static unsigned char buffer[USB_BUF_SZ];
 static struct udc_endpoint *in, *out;
-static struct udc_request *req;
-int txn_status;
+static struct udc_request *req_rx;
+static struct udc_request *req_tx;
+static int tx_status, rx_status;
 
 static void *download_base;
 static unsigned download_max;
@@ -141,11 +145,18 @@ static unsigned download_size;
 
 static unsigned fastboot_state = STATE_OFFLINE;
 
-static void req_complete(struct udc_request *req, unsigned actual, int status)
+static void rx_complete(struct udc_request *_req, unsigned actual, int status)
 {
-	txn_status = status;
-	req->length = actual;
-	event_signal(&txn_done, 0);
+	rx_status = status;
+	_req->length = actual;
+	event_signal(&rx_done, 0);
+}
+
+static void tx_complete(struct udc_request *_req, unsigned actual, int status)
+{
+	tx_status = status;
+	_req->length = actual;
+	event_signal(&tx_done, 0);
 }
 
 static int usb_read(void *_buf, unsigned len)
@@ -160,29 +171,31 @@ static int usb_read(void *_buf, unsigned len)
 		goto oops;
 
 	while (len > 0) {
-		xfer = (len > 4096) ? 4096 : len;
-		req->buf = buf;
-		req->length = xfer;
-		req->complete = req_complete;
-		r = udc_request_queue(out, req);
+		xfer = (len > USB_BUF_SZ) ? USB_BUF_SZ : len;
+		req_rx->buf = buf;
+		req_rx->length = xfer;
+		req_rx->complete = rx_complete;
+		r = udc_request_queue(out, req_rx);
 		if (r < 0) {
 			dprintf(INFO, "usb_read() queue failed\n");
 			goto oops;
 		}
-		event_wait(&txn_done);
+		event_wait(&rx_done);
 
-		if (txn_status < 0) {
+		if (rx_status < 0) {
 			dprintf(INFO, "usb_read() transaction failed\n");
 			goto oops;
 		}
 
-		count += req->length;
-		buf += req->length;
-		len -= req->length;
+		count += req_rx->length;
+		buf += req_rx->length;
+		len -= req_rx->length;
 
 		/* short transfer? */
-		if (req->length != xfer)
+		if (req_rx->length != xfer) {
+			dprintf(INFO, "%s: short read\n", __func__);
 			break;
+		}
 	}
 
 	return count;
@@ -200,21 +213,21 @@ static int usb_write(void *buf, unsigned len)
 	if (fastboot_state == STATE_ERROR
 		|| fastboot_state == STATE_OFFLINE)
 		goto oops;
-
-	req->buf = buf;
-	req->length = len;
-	req->complete = req_complete;
-	r = udc_request_queue(in, req);
+	
+	req_tx->buf = buf;
+	req_tx->length = len;
+	req_tx->complete = tx_complete;
+	r = udc_request_queue(in, req_tx);
 	if (r < 0) {
 		dprintf(INFO, "usb_write() queue failed\n");
 		goto oops;
 	}
-	event_wait(&txn_done);
-	if (txn_status < 0) {
+	event_wait(&tx_done);
+	if (tx_status < 0) {
 		dprintf(INFO, "usb_write() transaction failed\n");
 		goto oops;
 	}
-	return req->length;
+	return req_tx->length;
 
  oops:
 	printf("[fastboot] %s: oops\n", __func__);
@@ -361,7 +374,8 @@ int fastboot_init(void *base, unsigned size)
 	download_max = size;
 
 	event_init(&usb_online, 0, EVENT_FLAG_AUTOUNSIGNAL);
-	event_init(&txn_done, 0, EVENT_FLAG_AUTOUNSIGNAL);
+	event_init(&tx_done, 0, EVENT_FLAG_AUTOUNSIGNAL);
+	event_init(&rx_done, 0, EVENT_FLAG_AUTOUNSIGNAL);
 
 	in = udc_endpoint_alloc(UDC_TYPE_BULK_IN, 512);
 	if (!in)
@@ -373,9 +387,13 @@ int fastboot_init(void *base, unsigned size)
 	fastboot_endpoints[0] = in;
 	fastboot_endpoints[1] = out;
 
-	req = udc_request_alloc();
-	if (!req)
-		goto fail_alloc_req;
+	req_rx = udc_request_alloc();
+	if (!req_rx)
+		goto fail_alloc_rx;
+	
+	req_tx = udc_request_alloc();
+	if (!req_tx)
+		goto fail_alloc_tx;
 
 	if (udc_register_gadget(&fastboot_gadget))
 		goto fail_udc_register;
@@ -391,8 +409,10 @@ int fastboot_init(void *base, unsigned size)
 	return 0;
 
  fail_udc_register:
-	udc_request_free(req);
- fail_alloc_req:
+ 	udc_request_free(req_tx);
+ fail_alloc_tx:
+	udc_request_free(req_rx);
+ fail_alloc_rx:
 	udc_endpoint_free(out);
  fail_alloc_out:
 	udc_endpoint_free(in);
