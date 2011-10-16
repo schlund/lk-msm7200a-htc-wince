@@ -812,7 +812,7 @@ int udc_start(void)
 	/* create our device descriptor */
 	desc = udc_descriptor_alloc(TYPE_DEVICE, 0, 18);
 	data = desc->data;
-	data[2] = 0x10;		/* usb spec minor rev */
+	data[2] = 0x00;		/* usb spec minor rev */
 	data[3] = 0x02;		/* usb spec major rev */
 	data[4] = 0x00;		/* class */
 	data[5] = 0x00;		/* subclass */
@@ -859,13 +859,6 @@ int udc_stop(void)
 
 	/* disable pullup */
 	writel(0x00080000, USB_USBCMD);
-#ifdef PLATFORM_MSM8X60
-	/* Voting down PLL8 */
-	int val;
-	val = readl(0x009034C0);
-	val &= ~(1 << 8);
-	writel(val, 0x009034C0);
-#endif
 	thread_sleep(10);
 
 	return 0;
@@ -922,21 +915,6 @@ void usb_charger_change_state(void)
 		} else if (!is_usb_connected() && is_ac_connected()) {
 			/* disable D+ pull-up */
 			writel(0x00080000, USB_USBCMD);
-
-			/* Applicable only for 8k target */
-			/*USB Spoof Disconnect Failure
-			   Symptoms:
-			   In USB peripheral mode, writing '0' to Run/Stop bit of the
-			   USBCMD register doesn't cause USB disconnection (spoof disconnect).
-			   The PC host doesn't detect the disconnection and the phone remains
-			   active on Windows device manager.
-
-			   Suggested Workaround:
-			   After writing '0' to Run/Stop bit of USBCMD, also write 0x48 to ULPI
-			   "Function Control" register. This can be done via the ULPI VIEWPORT
-			   register (offset 0x170) by writing a value of 0x60040048.
-			 */
-			ulpi_write(0x48, 0x04);
 			set_charger_state(CHG_AC);
 		}
 	} else if ((readl(USB_USBCMD) & 0x01) == 0) {

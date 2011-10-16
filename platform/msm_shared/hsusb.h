@@ -31,9 +31,7 @@
 #ifndef _MSM7200_USB_H_
 #define _MSM7200_USB_H_
 
-#ifndef MSM_USB_BASE
 #define MSM_USB_BASE 0xA0800000
-#endif
 
 #define USB_ID               (MSM_USB_BASE + 0x0000)
 #define USB_HWGENERAL        (MSM_USB_BASE + 0x0004)
