@@ -46,7 +46,6 @@ static void htcphoton_display_init(void)
 {
 	struct fbcon_config* fb_config = mddi_init(&htcphoton_mddi_pdata);
 	ASSERT(fb_config);
-	fb_config->rotation = ROTATE_180;
 	fbcon_setup(fb_config);
 }
 
@@ -78,7 +77,7 @@ static void htcphoton_set_charger(enum psy_charger_state state) {
 }
 
 static bool htcphoton_usb_online(void) {
-	return 1;//dex_get_vbus_state();
+	return dex_get_vbus_state();
 }
 
 static bool htcphoton_ac_online(void) {
