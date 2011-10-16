@@ -592,7 +592,20 @@ static void udc_reset(void) {
 	writel(0x00000002, USB_USBCMD);
 	thread_sleep(20);
 	
+	writel(0xffffffff, USB_ENDPTFLUSH);
+	thread_sleep(2);
+	
 	ulpi_set_power(true);
+	thread_sleep(20);
+	
+	ulpi_write(0x18, 0x6);
+	thread_sleep(1);
+	ulpi_write(0x8, 0x5);
+	thread_sleep(1);
+	
+	/* RESET */
+	writel(2, USB_USBCMD);
+	thread_sleep(10);
 
 	/* INCR4 BURST mode */
 	writel(0x01, USB_SBUSCFG);
@@ -604,14 +617,13 @@ static void udc_reset(void) {
 	/* select ULPI phy */
 	writel(0x80000000, USB_PORTSC);
 	
-	//arch_clean_invalidate_cache_range(epts, 32 * sizeof(struct ept_queue_head));
-	writel((unsigned)epts, USB_ENDPOINTLISTADDR);
-
+	ulpi_write(0x40, 0x31);
 	ulpi_write(0x1d, 0x0d);
 	ulpi_write(0x1d, 0x10);
-
-	writel(0xffffffff, USB_ENDPTFLUSH);
-	thread_sleep(20);
+	ulpi_write(0x5, 0xa);
+	
+	//arch_clean_invalidate_cache_range(epts, 32 * sizeof(struct ept_queue_head));
+	writel((unsigned)epts, USB_ENDPOINTLISTADDR);
 }
 
 int udc_init(struct udc_device *dev) {
