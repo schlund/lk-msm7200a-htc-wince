@@ -129,14 +129,15 @@ static void fbcon_scroll_up_180(void)
 
 static void fbcon_scroll_up_0(void) {
 	unsigned short *dst = fbcon.config->base;
-	unsigned short *limit = fbcon.config->base +
-	fbcon.config->width * fbcon.config->height * (fbcon.config->bpp >> 3);
 	unsigned short *src = dst + (fbcon.config->width * FONT_HEIGHT);
 	unsigned count = fbcon.config->width * (fbcon.config->height - FONT_HEIGHT);
-	while (count++) {
+
+	while(count--) {
 		*dst++ = *src++;
 	}
-	while (dst < limit) {
+
+	count = fbcon.config->width * FONT_HEIGHT;
+	while(count--) {
 		*dst++ = fbcon.bg_color;
 	}
 }
