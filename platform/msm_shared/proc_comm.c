@@ -56,8 +56,6 @@ int msm_proc_comm(unsigned cmd, unsigned *data1, unsigned *data2)
 	int ret = -1;
 	unsigned status;
 
-	dprintf(INFO, "[PCOM] [%d,%d,%d]\n",
-		cmd, data1 ? *data1 : 0, data2 ? *data2 : 0);
 	while (readl(MDM_STATUS) != PCOM_READY) {
 		/* XXX check for A9 reset */
 	}
@@ -68,7 +66,6 @@ int msm_proc_comm(unsigned cmd, unsigned *data1, unsigned *data2)
 	if (data2)
 		writel(*data2, APP_DATA2);
 
-	dprintf(INFO, "[PCOM]: TX\n");
 	notify_other_proc_comm();
 	while (readl(APP_COMMAND) != PCOM_CMD_DONE) {
 		/* XXX check for A9 reset */
@@ -84,7 +81,7 @@ int msm_proc_comm(unsigned cmd, unsigned *data1, unsigned *data2)
 		ret = 0;
 	}
 	else {
-		dprintf(INFO, "[PCOM]: FAIL\n");
+		dprintf(INFO, "[PCOM]: FAIL [%x %x %x]\n", cmd, data1, data2);
 	}
 
 	return ret;
