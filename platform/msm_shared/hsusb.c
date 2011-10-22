@@ -578,7 +578,7 @@ void ulpi_write(unsigned val, unsigned reg)
 	}
 }
 
-static int msm_otg_xceiv_reset()
+static inline void msm_otg_xceiv_reset()
 {
 	clk_disable(USB_HS_CLK);
 	clk_disable(USB_HS_PCLK);
@@ -627,7 +627,7 @@ static void udc_reset(void) {
 	writel(0x80002, USB_USBCMD);
 	thread_sleep(10);
 	
-#if 0
+#if 0 //msm7200A
 	/* INCR4 BURST mode */
 	writel(0x01, USB_SBUSCFG);
 #else
@@ -645,6 +645,7 @@ static void udc_reset(void) {
 	writel(0x81000000, USB_PORTSC);
 	writel(readl(USB_PORTSC) & ~PORTSC_PHCD, USB_PORTSC);
 	
+	/* board specific. should be passed via pdata */
 	ulpi_write(0xc, 0x31);
 	ulpi_write(0x30, 0x32);
 	ulpi_write(0x1d, 0xd);
