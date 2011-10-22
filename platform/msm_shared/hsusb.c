@@ -547,23 +547,35 @@ static void handle_setup(struct udc_endpoint *ept)
 
 unsigned ulpi_read(unsigned reg)
 {
+	unsigned timeout = 10000;
+
 	/* initiate read operation */
 	writel(ULPI_RUN | ULPI_READ | ULPI_ADDR(reg), USB_ULPI_VIEWPORT);
 
 	/* wait for completion */
-	while (readl(USB_ULPI_VIEWPORT) & ULPI_RUN) ;
+	while ((readl(USB_ULPI_VIEWPORT) & ULPI_RUN) && (--timeout));
+	
+	if (!timeout) {
+		printf("%s: timeout reading from %x\n", __func__, reg);
+		return -1UL;
+	}
 
 	return ULPI_DATA_READ(readl(USB_ULPI_VIEWPORT));
 }
 
 void ulpi_write(unsigned val, unsigned reg)
 {
+	unsigned timeout = 10000;
 	/* initiate write operation */
 	writel(ULPI_RUN | ULPI_WRITE |
 	       ULPI_ADDR(reg) | ULPI_DATA(val), USB_ULPI_VIEWPORT);
 
 	/* wait for completion */
-	while (readl(USB_ULPI_VIEWPORT) & ULPI_RUN) ;
+	while ((readl(USB_ULPI_VIEWPORT) & ULPI_RUN) && (--timeout));
+
+	if (!timeout) {
+		printf("%s: timeout writing %x to %x\n", __func__, val, reg);
+	}
 }
 
 static int msm_otg_xceiv_reset()
