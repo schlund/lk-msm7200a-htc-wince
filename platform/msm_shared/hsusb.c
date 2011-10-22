@@ -586,55 +586,70 @@ static int msm_otg_xceiv_reset()
 	clk_enable(USB_HS_PCLK);
 	clk_enable(USB_HS_CLK);
 	thread_sleep(20);
-	return 0;
 }
 
 void msm_hsusb_init(struct msm_hsusb_pdata *new_pdata) {
 	pdata = new_pdata;
 }
 
+static inline void disable_pullup(void) {
+	writel(0x80000, USB_USBCMD);
+	thread_sleep(10);
+#if 1 //ndef CONFIG_ARCH_MSM7X00A
+//	ulpi_write(0x48, 0x04);
+#endif
+	
+}
+
+static inline void enable_pullup(void) {
+	writel(0x80001, USB_USBCMD);
+	
+}
+
 static void udc_reset(void) {
 	msm_otg_xceiv_reset();
-
-	/* disable usb interrupts */
+	ulpi_set_power(true);
+	thread_sleep(100);
+	
+	/* disable usb interrupts and otg */
 	writel(0, USB_USBINTR);
+	writel(0, USB_OTGSC);
 	thread_sleep(5);
 	
 	/* RESET */
-	writel(0x00000002, USB_USBCMD);
-	thread_sleep(20);
+	writel(0x80002, USB_USBCMD);
+	thread_sleep(10);
 	
 	writel(0xffffffff, USB_ENDPTFLUSH);
 	thread_sleep(2);
 	
-	ulpi_set_power(true);
-	thread_sleep(20);
-	
-	ulpi_write(0x18, 0x6);
-	thread_sleep(1);
-	ulpi_write(0x8, 0x5);
-	thread_sleep(1);
-	
 	/* RESET */
-	writel(2, USB_USBCMD);
+	writel(0x80002, USB_USBCMD);
 	thread_sleep(10);
-
+	
+#if 0
 	/* INCR4 BURST mode */
 	writel(0x01, USB_SBUSCFG);
-	
+#else
+	/* bursts of unspecified length. */
+	writel(0, USB_AHBBURST);
+	/* Use the AHB transactor */
+	writel(0, USB_AHBMODE);
+#endif
+
 	/* select DEVICE mode */
-	writel(0x12, USB_USBMODE);
+	writel(0x02, USB_USBMODE);
 	thread_sleep(1);
-	
+
 	/* select ULPI phy */
-	writel(0x80000000, USB_PORTSC);
+	writel(0x81000000, USB_PORTSC);
+	writel(readl(USB_PORTSC) & ~PORTSC_PHCD, USB_PORTSC);
 	
-	ulpi_write(0x40, 0x31);
-	ulpi_write(0x1d, 0x0d);
+	ulpi_write(0xc, 0x31);
+	ulpi_write(0x30, 0x32);
+	ulpi_write(0x1d, 0xd);
 	ulpi_write(0x1d, 0x10);
-	ulpi_write(0x5, 0xa);
-	
-	//arch_clean_invalidate_cache_range(epts, 32 * sizeof(struct ept_queue_head));
+
 	writel((unsigned)epts, USB_ENDPOINTLISTADDR);
 }
 
@@ -662,6 +677,11 @@ int udc_init(struct udc_device *dev) {
 		desc->data[3] = 0x04;
 		udc_descriptor_register(desc);
 	}
+	
+	writel(0xffffffff, USB_ENDPTFLUSH);
+	thread_sleep(20);
+
+	disable_pullup();
 
 	the_device = dev;
 	return 0;
@@ -710,8 +730,10 @@ enum handler_return udc_interrupt(void *arg)
 		DBG("-- portchange --\n");
 		unsigned spd = (readl(USB_PORTSC) >> 26) & 3;
 		if (spd == 2) {
+			DBG("portchange speed HIGH\n");
 			usb_highspeed = 1;
 		} else {
+			DBG("portchange speed LOW\n");
 			usb_highspeed = 0;
 		}
 		if (is_usb_connected()) {
@@ -819,7 +841,7 @@ int udc_start(void)
 		return -1;
 	}
 
-	udc_reset();
+	//udc_reset();
 
 	/* create our device descriptor */
 	desc = udc_descriptor_alloc(TYPE_DEVICE, 0, 18);
@@ -856,10 +878,11 @@ int udc_start(void)
 
 	register_int_handler(INT_USB_HS, udc_interrupt, (void *)0);
 	writel(STS_URI | STS_SLI | STS_UI | STS_PCI, USB_USBINTR);
+
 	unmask_interrupt(INT_USB_HS);
 
 	/* go to RUN mode (D+ pullup enable) */
-	writel(0x00080001, USB_USBCMD);
+	enable_pullup();
 
 	return 0;
 }
@@ -870,7 +893,7 @@ int udc_stop(void)
 	mask_interrupt(INT_USB_HS);
 
 	/* disable pullup */
-	writel(0x00080000, USB_USBCMD);
+	disable_pullup();
 	thread_sleep(10);
 
 	return 0;
