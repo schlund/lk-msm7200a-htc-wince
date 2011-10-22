@@ -41,6 +41,9 @@
 #define USB_HWRXBUF          (MSM_USB_BASE + 0x0014)
 #define USB_SBUSCFG          (MSM_USB_BASE + 0x0090)
 
+#define USB_AHBBURST         (MSM_USB_BASE + 0x0090)
+#define USB_AHBMODE          (MSM_USB_BASE + 0x0098)
+
 #define USB_CAPLENGTH        (MSM_USB_BASE + 0x0100)	/* 8 bit */
 #define USB_HCIVERSION       (MSM_USB_BASE + 0x0102)	/* 16 bit */
 #define USB_HCSPARAMS        (MSM_USB_BASE + 0x0104)
@@ -164,7 +167,15 @@ struct ept_queue_item {
 /* for USB charging */
 #define TRUE              1
 #define FALSE             0
-#define PORTSC_LS         (3 << 10)	/* Read - Port's Line status */
 #define B_SESSION_VALID   (1 << 11)
+
+#define PORTSC_CCS             (1 << 0)  /* current connect status */
+#define PORTSC_FPR             (1 << 6)  /* R/W - State normal => suspend */
+#define PORTSC_PORT_RESET      (1 << 8)
+#define PORTSC_SUSP            (1 << 7)  /* Read - Port in suspend state */
+#define PORTSC_LS              (3 << 10) /* Read - Port's Line status */
+#define PORTSC_PHCD            (1 << 23) /* phy suspend mode */
+#define PORTSC_PTS_ULPI         (2 << 30)
+#define PORTSC_PTS_SERIAL       (3 << 30)
 
 #endif
