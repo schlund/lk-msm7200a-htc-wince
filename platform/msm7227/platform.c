@@ -13,6 +13,7 @@
  */
 
 #include <debug.h>
+#include <arch/arm/mmu.h>
 #include <platform.h>
 #include <platform/debug.h>
 #include <platform/clock.h>
@@ -38,3 +39,16 @@ void platform_exit(void) {
 	platform_deinit_interrupts();
 }
 
+void platform_init_mmu_mappings(void)
+{
+    uint32_t sections = 1152;
+
+    /* Map io mapped peripherals as device non-shared memory */
+    while (sections--)
+    {
+        arm_mmu_map_section(0x88000000 + (sections << 20),
+                            0x88000000 + (sections << 20),
+                            (MMU_MEMORY_TYPE_DEVICE_NON_SHARED |
+                             MMU_MEMORY_AP_READ_WRITE));
+    }
+}
