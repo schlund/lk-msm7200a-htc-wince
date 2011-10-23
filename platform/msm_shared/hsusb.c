@@ -234,7 +234,7 @@ struct udc_endpoint *_udc_endpoint_alloc(unsigned num, unsigned in,
 	ept->next = ept_list;
 	ept_list = ept;
 
-	//arch_clean_invalidate_cache_range(ept->head, 64);
+	arch_clean_invalidate_cache_range((addr_t)ept->head, 64);
 	DBG("ept%d %s @%p/%p max=%d bit=%x\n",
 	    num, in ? "in" : "out", ept, ept->head, max_pkt, ept->bit);
 
@@ -681,6 +681,9 @@ int udc_init(struct udc_device *dev) {
 
 	dprintf(INFO, "USB init ept @ %p\n", epts);
 	memset(epts, 0, 32 * sizeof(struct ept_queue_head));
+	arch_clean_invalidate_cache_range((addr_t) epts,
+		32 * sizeof(struct ept_queue_head));
+
 
 	dprintf(INFO, "USB ID %08x\n", readl(USB_ID));
 
