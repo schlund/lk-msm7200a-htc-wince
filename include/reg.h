@@ -36,8 +36,13 @@
 #define RMWREG16(addr, startbit, width, val) *REG16(addr) = (*REG16(addr) & ~(((1<<(width)) - 1) << (startbit))) | ((val) << (startbit))
 #define RMWREG8(addr, startbit, width, val) *REG8(addr) = (*REG8(addr) & ~(((1<<(width)) - 1) << (startbit))) | ((val) << (startbit))
 
-#define writel(v, a) (*REG32(a) = (v))
-#define readl(a) (*REG32(a))
+#define __raw__writel(v, a) (*REG32(a) = (v))
+#define __raw__readl(a) (*REG32(a))
+
+extern void dmb(void);
+
+#define writel(v, a) ({dmb(); __raw__writel(v, a);})
+#define readl(a) ({uint32_t __v = __raw__readl(a); dmb(); __v;})
 
 #define writeb(v, a) (*REG8(a) = (v))
 #define readb(a) (*REG8(a))
