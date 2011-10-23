@@ -617,10 +617,6 @@ void msm_hsusb_init(struct msm_hsusb_pdata *new_pdata) {
 static inline void disable_pullup(void) {
 	writel(0x80000, USB_USBCMD);
 	thread_sleep(10);
-#if 1 //ndef CONFIG_ARCH_MSM7X00A
-//	ulpi_write(0x48, 0x04);
-#endif
-	
 }
 
 static inline void enable_pullup(void) {
@@ -632,50 +628,27 @@ static void udc_reset(void) {
 	msm_otg_xceiv_reset();
 	ulpi_set_power(true);
 	thread_sleep(100);
+	msm_otg_xceiv_reset();
 	
 	/* disable usb interrupts and otg */
-	writel(0, USB_USBINTR);
 	writel(0, USB_OTGSC);
 	thread_sleep(5);
 	
-	/* RESET */
-	writel(0x80002, USB_USBCMD);
-	thread_sleep(10);
-	
-	writel(0xffffffff, USB_ENDPTFLUSH);
-	thread_sleep(2);
+	/* select ULPI phy */
+	writel(0x81000000, USB_PORTSC);
 	
 	/* RESET */
 	writel(0x80002, USB_USBCMD);
-	thread_sleep(10);
-	
-#if 0 //msm7200A
-	/* INCR4 BURST mode */
-	writel(0x01, USB_SBUSCFG);
-#else
-	/* bursts of unspecified length. */
-	writel(0, USB_AHBBURST);
-	/* Use the AHB transactor */
-	writel(0, USB_AHBMODE);
-#endif
+	thread_sleep(20);
 
+	writel((unsigned)epts, USB_ENDPOINTLISTADDR);
+	
 	/* select DEVICE mode */
 	writel(0x02, USB_USBMODE);
 	thread_sleep(1);
-
-	/* select ULPI phy */
-	writel(0x81000000, USB_PORTSC);
-	writel(readl(USB_PORTSC) & ~PORTSC_PHCD, USB_PORTSC);
-
-#if 0
-	/* board specific. should be passed via pdata */
-	ulpi_write(0xc, 0x31);
-	ulpi_write(0x30, 0x32);
-	ulpi_write(0x1d, 0xd);
-	ulpi_write(0x1d, 0x10);
-#endif
-
-	writel((unsigned)epts, USB_ENDPOINTLISTADDR);
+	
+	writel(0xffffffff, USB_ENDPTFLUSH);
+	thread_sleep(20);
 }
 
 int udc_init(struct udc_device *dev) {
@@ -683,13 +656,13 @@ int udc_init(struct udc_device *dev) {
 
 	dprintf(INFO, "USB init ept @ %p\n", epts);
 	memset(epts, 0, 32 * sizeof(struct ept_queue_head));
+#if 0
 	arch_clean_invalidate_cache_range((addr_t) epts,
 		32 * sizeof(struct ept_queue_head));
-
-
-	dprintf(INFO, "USB ID %08x\n", readl(USB_ID));
-
+#endif
+	
 	udc_reset();
+	dprintf(INFO, "USB ID %08x\n", readl(USB_ID));
 
 	ep0out = _udc_endpoint_alloc(0, 0, 64);
 	ep0in = _udc_endpoint_alloc(0, 1, 64);
@@ -706,11 +679,6 @@ int udc_init(struct udc_device *dev) {
 		udc_descriptor_register(desc);
 	}
 	
-	writel(0xffffffff, USB_ENDPTFLUSH);
-	thread_sleep(20);
-
-	disable_pullup();
-
 	the_device = dev;
 	return 0;
 }
