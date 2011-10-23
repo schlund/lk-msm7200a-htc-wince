@@ -330,9 +330,17 @@ int udc_request_queue(struct udc_endpoint *ept, struct udc_request *_req)
 	ept->head->info = 0;
 	ept->req = req;
 
-	//arch_clean_invalidate_cache_range(item, 32);
-	//arch_clean_invalidate_cache_range(ept->head, 64);
-	//arch_clean_invalidate_cache_range(req->req.buf, req->req.length);
+	arch_clean_invalidate_cache_range((addr_t) ept,
+					  sizeof(struct udc_endpoint));
+	arch_clean_invalidate_cache_range((addr_t) ept->head,
+					  sizeof(struct ept_queue_head));
+	arch_clean_invalidate_cache_range((addr_t) ept->req,
+					  sizeof(struct usb_request));
+	arch_clean_invalidate_cache_range((addr_t) req->req.buf,
+					  req->req.length);
+	arch_clean_invalidate_cache_range((addr_t) ept->req->item,
+					  sizeof(struct ept_queue_item));
+
 	DBG("ept%d %s queue req=%p\n", ept->num, ept->in ? "in" : "out", req);
 
 	writel(ept->bit, USB_ENDPTPRIME);
@@ -350,6 +358,11 @@ static void handle_ept_complete(struct udc_endpoint *ept)
 	DBG("ept%d %s complete req=%p\n",
 	    ept->num, ept->in ? "in" : "out", ept->req);
 
+	arch_clean_invalidate_cache_range((addr_t) ept,
+					  sizeof(struct udc_endpoint));
+	arch_clean_invalidate_cache_range((addr_t) ept->req,
+					  sizeof(struct usb_request));
+
 	req = ept->req;
 	if (req) {
 		ept->req = 0;
@@ -360,10 +373,17 @@ static void handle_ept_complete(struct udc_endpoint *ept)
 		 * transfer completion before the active bit has cleared.
 		 * HACK: wait for the ACTIVE bit to clear:
 		 */
-		while (readl(&(item->info)) & INFO_ACTIVE) ;
+		do {
+			/* Must clean/invalidate cached item data before checking
+			 * the status every time.
+			 */
+			arch_clean_invalidate_cache_range((addr_t) item,
+							  sizeof(struct
+								 ept_queue_item));
+		} while (readl(&(item->info)) & INFO_ACTIVE);
 
-		//arch_clean_invalidate_cache_range(item, 32);
-		//arch_clean_invalidate_cache_range(req->req.buf, req->req.length);
+		arch_clean_invalidate_cache_range((addr_t) req->req.buf,
+						  req->req.length);
 
 		if (item->info & 0xff) {
 			actual = 0;
@@ -446,6 +466,8 @@ static void handle_setup(struct udc_endpoint *ept)
 {
 	struct setup_packet s;
 
+	arch_clean_invalidate_cache_range((addr_t) ept->head->setup_data,
+					  sizeof(struct ept_queue_head));
 	memcpy(&s, ept->head->setup_data, sizeof(s));
 	writel(ept->bit, USB_ENDPTSETUPSTAT);
 
