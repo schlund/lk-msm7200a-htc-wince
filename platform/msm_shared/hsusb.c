@@ -666,12 +666,14 @@ static void udc_reset(void) {
 	/* select ULPI phy */
 	writel(0x81000000, USB_PORTSC);
 	writel(readl(USB_PORTSC) & ~PORTSC_PHCD, USB_PORTSC);
-	
+
+#if 0
 	/* board specific. should be passed via pdata */
 	ulpi_write(0xc, 0x31);
 	ulpi_write(0x30, 0x32);
 	ulpi_write(0x1d, 0xd);
 	ulpi_write(0x1d, 0x10);
+#endif
 
 	writel((unsigned)epts, USB_ENDPOINTLISTADDR);
 }
