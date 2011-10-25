@@ -111,7 +111,7 @@ void acpu_clock_init(void)
 {
 	unsigned i, clk;
 
-#if 0// (!ENABLE_NANDWRITE)
+#if (!ENABLE_NANDWRITE)
 	int *modem_stat_check = (MSM_SHARED_BASE + 0x14);
 
 	/* Wait for modem to be ready before clock init */
