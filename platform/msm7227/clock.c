@@ -89,9 +89,5 @@ void msm_clock_init(void)
 {
 	mutex_init(&clk_mutex);
 	mutex_acquire(&clk_mutex);
-	pll_get_rate(PLL0);
-	pll_get_rate(PLL1);
-	pll_get_rate(PLL2);
-	pll_get_rate(PLL3);
 	mutex_release(&clk_mutex);
 }
