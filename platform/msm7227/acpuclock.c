@@ -33,6 +33,27 @@
 #include <reg.h>
 #include <debug.h>
 
+/* Fancy debugging messages */
+#define TCXO_RATE			19200000
+#define PLLn_BASE(n)	(MSM_CLK_CTL_BASE + 0x300 + 28 * (n))
+#define PLLn_L_VAL(n)	(PLLn_BASE(n) + 4)
+#define PLL_FREQ(l, m, n)	(TCXO_RATE * (l) + TCXO_RATE * (m) / (n))
+
+static void pll_dump(void)
+{
+	unsigned int mode, L, M, N, freq;
+
+	for (int pll = 0; pll <= 3; pll++) {
+		mode = readl(PLLn_BASE(pll) + 0x0);
+		L = readl(PLLn_BASE(pll) + 0x4);
+		M = readl(PLLn_BASE(pll) + 0x8);
+		N = readl(PLLn_BASE(pll) + 0xc);
+		freq = PLL_FREQ(L, M, N);
+		dprintf(INFO, "PLL%d: MODE=%08x L=%08x M=%08x N=%08x freq=%u Hz (%u MHz)\n",
+			pll, mode, L, M, N, freq, freq / 1000000);
+	}
+}
+
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 
 #define A11S_CLK_CNTL_ADDR	(MSM_CSR_BASE + 0x100)
@@ -142,5 +163,6 @@ void acpu_clock_init(void)
 		writel(clk_sel_reg_val[i], A11S_CLK_SEL_ADDR);
 		mdelay(1);
 	}
+	pll_dump();
 }
 

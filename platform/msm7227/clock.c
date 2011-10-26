@@ -17,48 +17,10 @@
 #include <stdio.h>
 #include <kernel/mutex.h>
 #include <platform/clock.h>
-#include <platform/iomap.h>
 #include <platform/timer.h>
 #include <platform/pcom.h>
-#include <reg.h>
 
 static mutex_t clk_mutex;
-
-#define TCXO_RATE			19200000
-#define PLLn_BASE(n)	(MSM_CLK_CTL_BASE + 0x300 + 28 * (n))
-#define PLLn_L_VAL(n)	(PLLn_BASE(n) + 4)
-#define PLL_FREQ(l, m, n)	(TCXO_RATE * (l) + TCXO_RATE * (m) / (n))
-
-enum pll {
-	TCXO = -1,
-	PLL0,
-	PLL1,
-	PLL2,
-	PLL3,
-	PLL_COUNT = PLL3 + 1,
-};
-
-static unsigned int pll_get_rate(enum pll pll)
-{
-	unsigned int mode, L, M, N, freq;
-
-	if (pll == TCXO)
-		return TCXO_RATE;
-	if (pll >= PLL_COUNT)
-		return 0;
-	else {
-		mode = readl(PLLn_BASE(pll) + 0x0);
-		L = readl(PLLn_BASE(pll) + 0x4);
-		M = readl(PLLn_BASE(pll) + 0x8);
-		N = readl(PLLn_BASE(pll) + 0xc);
-		freq = PLL_FREQ(L, M, N);
-	}
-
-	dprintf(INFO, "PLL%d: MODE=%08x L=%08x M=%08x N=%08x freq=%u Hz (%u MHz)\n",
-		pll, mode, L, M, N, freq, freq / 1000000);
-
-	return freq;
-}
 
 int clk_enable(unsigned id)
 {
