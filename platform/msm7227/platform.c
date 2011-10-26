@@ -16,6 +16,7 @@
 #include <arch/arm/mmu.h>
 #include <platform.h>
 #include <platform/debug.h>
+#include <platform/acpuclock.h>
 #include <platform/clock.h>
 #include <platform/timer.h>
 #include <platform/interrupts.h>
@@ -31,6 +32,7 @@ void platform_early_init(void)
 void platform_init(void)
 {
 	dprintf(INFO, "platform_init()\n");
+	acpu_clock_init();
 }
 
 void platform_exit(void) {
