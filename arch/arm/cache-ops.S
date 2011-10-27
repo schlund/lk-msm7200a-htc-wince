@@ -73,7 +73,6 @@ FUNCTION(arch_disable_cache)
 	mcr		p15, 0, r1, c1, c0, 0		// disable icache
 
 	mcr		p15, 0, r12, c7, c5, 0		// invalidate icache
-	mcr		p15, 0, r0, c7, c10, 5		//AXI bus buffer
 
 .Ldone_disable:
 	msr		cpsr, r3
@@ -107,7 +106,6 @@ FUNCTION(arch_enable_cache)
 	beq		.Ldone_enable
 
 	mcr		p15, 0, r12, c7, c5, 0		// invalidate icache
-	mcr		p15, 0, r0, c7, c10, 5		//AXI bus buffer
 
 	mrc     p15, 0, r1, c1, c0, 0		// cr1
 	orr		r1, #(1<<12)
@@ -170,7 +168,6 @@ FUNCTION(arch_disable_cache)
 	// make sure the icache is always invalidated
 	mov		r0, #0
 	mcr		p15, 0, r0, c7, c5, 0		// invalidate icache to PoU
-	mcr		p15, 0, r0, c7, c10, 5		//AXI bus buffer
 
 	msr		cpsr, r12
 	ldmfd	sp!, {r4-r11, pc}
@@ -212,7 +209,6 @@ FUNCTION(arch_enable_cache)
 
 	mov		r0, #0
 	mcr		p15, 0, r0, c7, c5, 0		// invalidate icache to PoU
-	mcr		p15, 0, r0, c7, c10, 5		//AXI bus buffer
 
 	mrc     p15, 0, r0, c1, c0, 0		// cr1
 	orr		r0, #(1<<12)
@@ -332,10 +328,6 @@ FUNCTION(arch_clean_cache_range)
 	mov		r0, #0
 	mcr		p15, 0, r0, c7, c10, 4		// data sync barrier (formerly drain write buffer)
 
-/* new */
-	mcr		p15, 0, r0, c7, c5, 0		// flush icache
-	mcr		p15, 0, r0, c7, c10, 5		//AXI bus buffer
-
 	bx		lr
 
 	/* void arch_flush_invalidate_cache_range(addr_t start, size_t len); */
@@ -348,9 +340,6 @@ FUNCTION(arch_clean_invalidate_cache_range)
 
 	mov		r0, #0
 	mcr		p15, 0, r0, c7, c10, 4		// data sync barrier (formerly drain write buffer)
-/* new */
-	mcr		p15, 0, r0, c7, c5, 0		// flush icache
-	mcr		p15, 0, r0, c7, c10, 5		//AXI bus buffer
 
 	bx		lr
 #else
