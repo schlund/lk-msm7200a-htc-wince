@@ -234,16 +234,9 @@ void dex_reboot(void)
 	}
 	enter_critical_section();
 	halt_done = true;
-	exit_critical_section();
 
-	struct msm_dex_command dex = {.cmd = DEX_NOTIFY_ARM9_REBOOT };
-	msm_dex_comm(&dex, 0);
-	
-	while (1) {
-		writel(MSM_GPIOCFG2_BASE + 0x504, readl(MSM_GPIOCFG2_BASE + 0x504) | 0x200);
-		writel(MSM_GPIO2_BASE + 0xC08, readl(MSM_GPIO2_BASE + 0xC08) | 0x200);
-		writel(MSM_GPIO2_BASE + 0xC00, readl(MSM_GPIO2_BASE + 0xC00) & ~0x200);
-		dprintf(INFO "%s: Soft reset done.\n", __func__);
-		mdelay(350);
-	}
+//	__raw__writel(MSM_GPIOCFG2_BASE + 0x504, __raw__readl(MSM_GPIOCFG2_BASE + 0x504) | 0x200);
+	gpio_set(25, 0);
+	dprintf(INFO "%s: Soft reset done.\n", __func__);
+	exit_critical_section();
 }
