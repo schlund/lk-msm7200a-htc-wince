@@ -123,9 +123,11 @@ void fastboot_publish(const char *name, const char *value)
 	}
 }
 
+static unsigned char *buffer = NULL;
+
 static event_t usb_online;
 static event_t txn_done;
-static unsigned char buffer[4096];
+//static unsigned char buffer[4096];
 static struct udc_endpoint *in, *out;
 static struct udc_request *req;
 int txn_status;
@@ -179,10 +181,11 @@ static int usb_read(void *_buf, unsigned len)
 		count += req->length;
 		buf += req->length;
 		len -= req->length;
-
+		
 		/* short transfer? */
-		if (req->length != xfer)
+		if (req->length != xfer) {
 			break;
+		}
 	}
 
 	return count;
@@ -362,6 +365,12 @@ int fastboot_init(void *base, unsigned size)
 
 	event_init(&usb_online, 0, EVENT_FLAG_AUTOUNSIGNAL);
 	event_init(&txn_done, 0, EVENT_FLAG_AUTOUNSIGNAL);
+
+	buffer = malloc(4096);
+	if (!buffer) {
+		printf("%s: failed to allocate buffer\n");
+		return -1;
+	}
 
 	in = udc_endpoint_alloc(UDC_TYPE_BULK_IN, 512);
 	if (!in)
