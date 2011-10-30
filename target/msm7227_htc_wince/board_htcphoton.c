@@ -257,10 +257,5 @@ static void htcphoton_init(void) {
 struct msm7k_board htcphoton_board = {
 	.early_init = htcphoton_early_init,
 	.init = htcphoton_init,
-	.cmdline = "fbcon=rotate:2"
-	" smd_rpcrouter.hot_boot=1"
-	" mmc_core.removable=1"
-	" init=/init physkeyboard=kovsq"
-	" force_cdma=0 hwrotation=180 lcd.density=240"
-	" msmvkeyb_toggle=off",
+	.cmdline = "rw",
 };
