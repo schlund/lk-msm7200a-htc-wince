@@ -123,11 +123,11 @@ void fastboot_publish(const char *name, const char *value)
 	}
 }
 
+#define BUF_SIZE 4096
 static unsigned char *buffer = NULL;
 
 static event_t usb_online;
 static event_t txn_done;
-//static unsigned char buffer[4096];
 static struct udc_endpoint *in, *out;
 static struct udc_request *req;
 int txn_status;
@@ -162,7 +162,7 @@ static int usb_read(void *_buf, unsigned len)
 		goto oops;
 
 	while (len > 0) {
-		xfer = (len > 4096) ? 4096 : len;
+		xfer = (len > BUF_SIZE) ? BUF_SIZE : len;
 		req->buf = buf;
 		req->length = xfer;
 		req->complete = req_complete;
@@ -220,7 +220,7 @@ static int usb_write(void *buf, unsigned len)
 	return req->length;
 
  oops:
-	printf("[fastboot] %s: oops\n", __func__);
+	dprintf(INFO, "[fastboot] %s: oops\n", __func__);
 	fastboot_state = STATE_ERROR;
 	return -1;
 }
@@ -283,6 +283,7 @@ static void cmd_download(const char *arg, void *data, unsigned sz)
 
 	r = usb_read(download_base, len);
 	if ((r < 0) || ((unsigned)r != len)) {
+		dprintf(INFO, "%s: read error\n", __func__);
 		fastboot_state = STATE_ERROR;
 		return;
 	}
@@ -366,11 +367,12 @@ int fastboot_init(void *base, unsigned size)
 	event_init(&usb_online, 0, EVENT_FLAG_AUTOUNSIGNAL);
 	event_init(&txn_done, 0, EVENT_FLAG_AUTOUNSIGNAL);
 
-	buffer = malloc(4096);
+	buffer = malloc(BUF_SIZE);
 	if (!buffer) {
 		printf("%s: failed to allocate buffer\n");
 		return -1;
 	}
+	memset(buffer, 0, BUF_SIZE);
 
 	in = udc_endpoint_alloc(UDC_TYPE_BULK_IN, 512);
 	if (!in)
