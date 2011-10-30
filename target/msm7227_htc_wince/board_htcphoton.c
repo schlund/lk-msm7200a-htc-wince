@@ -121,12 +121,6 @@ static void htcphoton_usb_init(void) {
  * block size is 0x20000
  * offset is the size of all the data we don't want to mess with,
  * namely, bootloader and calibration
- * the last 16 mbytes are used for nand block markers etc so don't
- * use anything after 0x1fe00000
- *
- * TODO: make a fake mbr, specify LK as XIP
- * and the rest as imgfs or uldr and correct partitions offsets
- *
  */
 
 //0x02_84_36_AC
@@ -134,7 +128,7 @@ static void htcphoton_usb_init(void) {
 #define HTCPHOTON_RESERVED_SECTORS 321
 #define HTCPHOTON_FLASH_SIZE 0x1000
 
-#define HTCPHOTON_FLASH_OFFSET (HTCPHOTON_RESERVED_SECTORS + 1)
+#define HTCPHOTON_FLASH_OFFSET (HTCPHOTON_RESERVED_SECTORS + 0)
 
 #define HTCPHOTON_FLASH_RECOVERY_START 0
 #define HTCPHOTON_FLASH_RECOVERY_SIZE 0x50
@@ -226,8 +220,6 @@ static void htcphoton_nand_init(void) {
 		return;
 	}
 
-	return;
-
 	for (int i = 0; i < nparts; i++) {
 		struct ptentry *ptn = &htcphoton_part_list[i];
 		unsigned len = ptn->length;
@@ -237,21 +229,23 @@ static void htcphoton_nand_init(void) {
 		}
 		ptable_add(&flash_ptable, ptn->name, offset + ptn->start,
 			len, ptn->flags, ptn->type, ptn->perm);
+		break;
 	}
 
-	ptable_dump(&flash_ptable);
 	flash_set_ptable(&flash_ptable);
 }
+
 /******************************************************************************
  * Exports
  *****************************************************************************/
 static void htcphoton_early_init(void) {
+	photon_vibe(200);
 	htcphoton_display_init();
 }
 
 static void htcphoton_init(void) {
 	htcphoton_usb_init();
-	//htcphoton_nand_init();
+	htcphoton_nand_init();
 }
 
 struct msm7k_board htcphoton_board = {
