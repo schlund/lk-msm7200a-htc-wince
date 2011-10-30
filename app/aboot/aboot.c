@@ -242,7 +242,7 @@ void cmd_boot(const char *arg, void *data, unsigned sz)
 {
 	unsigned kernel_actual;
 	unsigned ramdisk_actual;
-	static struct boot_img_hdr hdr;
+	struct boot_img_hdr hdr;
 	char *ptr = ((char *)data);
 
 	if (sz < sizeof(hdr)) {
@@ -259,7 +259,7 @@ void cmd_boot(const char *arg, void *data, unsigned sz)
 		page_size = hdr.page_size;
 		page_mask = page_size - 1;
 	}
-
+	
 	kernel_actual = ROUND_TO_PAGE(hdr.kernel_size, page_mask);
 	ramdisk_actual = ROUND_TO_PAGE(hdr.ramdisk_size, page_mask);
 
@@ -420,6 +420,12 @@ void aboot_init(const struct app_descriptor *app)
 {
 	page_size = flash_page_size();
 	page_mask = page_size - 1;
+	
+	if (!page_size) {
+		page_size = 4096;
+		page_mask = page_size - 1;
+	}
+
 	enum boot_reason bootreason = get_boot_reason();
 	switch (bootreason) {
 		case BOOT_FASTBOOT:
