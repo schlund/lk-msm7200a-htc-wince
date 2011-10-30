@@ -28,24 +28,24 @@
 
 #include <reg.h>
 
-#define EBI_SIZE		0x06800000
-#define EBI_BASE    	0x10000000
+#define RAM0_SIZE		0x0CA00000
+#define RAM0_BASE    	0x00200000
 
-#define EBIN_BASE		0x20000000
-#define EBIN_SIZE		0x04c00000
+#define RAM1_BASE		0x20000000
+#define RAM1_SIZE		0x08000000
 
 unsigned* target_atag_mem(unsigned* ptr)
 {
 	/* ATAG_MEM */
 	*ptr++ = 4;
 	*ptr++ = 0x54410002;
-	*ptr++ = EBI_BASE;
-	*ptr++ = EBI_SIZE;
+	*ptr++ = RAM0_BASE;
+	*ptr++ = RAM0_SIZE;
 
 	*ptr++ = 4,
 	*ptr++ = 0x54410002;
-	*ptr++ = EBIN_BASE;
-	*ptr++ = EBIN_SIZE;
+	*ptr++ = RAM1_BASE;
+	*ptr++ = RAM1_SIZE;
 
 	return ptr;
 }
