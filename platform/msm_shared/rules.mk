@@ -7,8 +7,13 @@ OBJS += \
 	$(LOCAL_DIR)/timer.o \
 	$(LOCAL_DIR)/debug.o \
 	$(LOCAL_DIR)/mddi.o \
-	$(LOCAL_DIR)/hsusb.o \
-	$(LOCAL_DIR)/nand.o
+	$(LOCAL_DIR)/hsusb.o
+
+ifeq ($(MSM_NAND_WINCE),1)
+	OBJS += $(LOCAL_DIR)/nand_wince.o
+else
+	OBJS += $(LOCAL_DIR)/nand.o
+endif
 
 ifeq ($(PLATFORM),msm7200a)
 		OBJS += $(LOCAL_DIR)/msm_i2c.o
