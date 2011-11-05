@@ -123,14 +123,16 @@ static void htcphoton_usb_init(void) {
  * namely, bootloader and calibration
  */
 
-//0x02_84_36_AC
-
 #define HTCPHOTON_RESERVED_SECTORS 321
 #define HTCPHOTON_FLASH_SIZE 0x1000
 
-#define HTCPHOTON_FLASH_OFFSET (HTCPHOTON_RESERVED_SECTORS + 0)
+#define HTCPHOTON_FLASH_OFFSET 0
 
-#define HTCPHOTON_FLASH_RECOVERY_START 0
+#define HTCPHOTON_FLASH_LK_START (HTCPHOTON_FLASH_OFFSET)
+#define HTCPHOTON_FLASH_LK_SIZE 1
+
+#define HTCPHOTON_FLASH_RECOVERY_START (HTCPHOTON_FLASH_LK_START + \
+	HTCPHOTON_FLASH_LK_SIZE)
 #define HTCPHOTON_FLASH_RECOVERY_SIZE 0x50
 
 #define HTCPHOTON_FLASH_MISC_START (HTCPHOTON_FLASH_RECOVERY_START + \
@@ -164,6 +166,13 @@ static void htcphoton_usb_init(void) {
 
 static struct ptable flash_ptable;
 static struct ptentry htcphoton_part_list[] = {
+	{
+		.start = HTCPHOTON_FLASH_LK_START,
+		.length = HTCPHOTON_FLASH_LK_SIZE,
+		.name = "lkbootloader",
+		.type = TYPE_APPS_PARTITION,
+		.perm = PERM_WRITEABLE,
+	},
 	{
 		.start = HTCPHOTON_FLASH_RECOVERY_START,
 		.length = HTCPHOTON_FLASH_RECOVERY_SIZE,
