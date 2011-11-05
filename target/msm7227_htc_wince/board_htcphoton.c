@@ -23,7 +23,7 @@
 #include <dev/fbcon.h>
 #include <dev/flash.h>
 #include <dev/gpio.h>
-#include <dev/gpio_keys.h>
+#include <dev/gpio_keypad.h>
 #include <dev/keys.h>
 #include <dev/udc.h>
 #include <lib/ptable.h>
@@ -238,23 +238,49 @@ static void htcphoton_nand_init(void) {
 		}
 		ptable_add(&flash_ptable, ptn->name, offset + ptn->start,
 			len, ptn->flags, ptn->type, ptn->perm);
-		break;
 	}
 
 	flash_set_ptable(&flash_ptable);
+}
+/******************************************************************************
+ * GPIO Keys
+ ******************************************************************************/
+static unsigned int photon_col_gpios[] = {35, 34, 33};
+static unsigned int photon_row_gpios[] = {52, 41, 40};
+
+#define KEYMAP_INDEX(row, col) ((row)*ARRAY_SIZE(photon_col_gpios) + (col))
+
+static const unsigned short photon_keymap[] = {
+	[KEYMAP_INDEX(0, 0)] = KEY_UP, //Volume UP
+	[KEYMAP_INDEX(0, 1)] = KEY_POWER,//Volume DOWN
+};
+
+static struct gpio_keypad_info photon_keypad_info = {
+	.keymap		= photon_keymap,
+	.output_gpios	= photon_col_gpios,
+	.input_gpios	= photon_row_gpios,
+	.noutputs	= ARRAY_SIZE(photon_col_gpios),
+	.ninputs	= ARRAY_SIZE(photon_row_gpios),
+	.settle_time	= 5 /* msec */,
+	.poll_time	= 20 /* msec */,
+	.flags		= GPIOKPF_DRIVE_INACTIVE,
+};
+
+static void htcphoton_keypad_init(void) {
+	gpio_keypad_init(&photon_keypad_info);
 }
 
 /******************************************************************************
  * Exports
  *****************************************************************************/
 static void htcphoton_early_init(void) {
-	photon_vibe(200);
 	htcphoton_display_init();
 }
 
 static void htcphoton_init(void) {
 	htcphoton_usb_init();
 	htcphoton_nand_init();
+	htcphoton_keypad_init();
 }
 
 struct msm7k_board htcphoton_board = {
