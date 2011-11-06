@@ -181,8 +181,8 @@ void target_init(void)
 	int ret = msm_dex_comm_init();
 	dprintf(INFO, "DEX init with ret = %d\n", ret);
 	acpu_clock_init();
-	ret = msm_i2c_probe(&i2c_pdata);
-	dprintf(INFO, "I2C init with ret = %d\n", ret);
+	//ret = msm_i2c_probe(&i2c_pdata);
+	//dprintf(INFO, "I2C init with ret = %d\n", ret);
 	if (board && board->init)
 		board->init();
 }
@@ -213,7 +213,7 @@ static void msm_prepare_clocks(void) {
 void target_exit(void) {
 	if (board && board->exit)
 		board->exit();
-	msm_i2c_remove();
+	//msm_i2c_remove();
 	msm_prepare_clocks();
 	writel(0, LK_BOOTREASON_ADDR);
 	writel(0, LK_BOOTREASON_ADDR + 4);
