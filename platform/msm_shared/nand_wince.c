@@ -704,10 +704,10 @@ static int _flash_nand_write_page(dmov_s * cmdlist, unsigned *ptrlist,
 	return 0;
 }
 
-char empty_buf[528];
 static int flash_nand_mark_badblock(dmov_s * cmdlist, unsigned *ptrlist,
 				    unsigned page)
 {
+	char empty_buf[528];
 	memset(empty_buf, 0, 528);
 	/* Going to first page of the block */
 	if (page & 63)
