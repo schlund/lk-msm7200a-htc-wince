@@ -287,4 +287,5 @@ struct msm7k_board htcphoton_board = {
 	.early_init = htcphoton_early_init,
 	.init = htcphoton_init,
 	.cmdline = "rw",
+	.scratch_size = 0xc900000 - SCRATCH_ADDR,
 };
