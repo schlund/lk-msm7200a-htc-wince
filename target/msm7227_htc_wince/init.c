@@ -227,7 +227,7 @@ void* target_get_scratch_addr(void) {
 }
 
 unsigned target_get_scratch_size(void) {
-	if (board && board->scratch_addr)
+	if (board && board->scratch_size)
 		return board->scratch_size;
 
 	//least common value supported by msm72k htc boards
