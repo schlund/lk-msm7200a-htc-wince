@@ -366,7 +366,6 @@ void cmd_reboot_bootloader(const char *arg, void *data, unsigned sz)
 }
 
 static void enter_fastboot(void) {
-	fbcon_clear();
 	printf("ENTERING FASTBOOT MODE\n");
 	
 	fastboot_register("flash:", cmd_flash);
@@ -403,7 +402,6 @@ static void boot_nand(void) {
 }
 
 static void boot_recovery(void) {
-	fbcon_clear();
 	printf("ENTERING RECOVERY MODE\n");
 	
 	boot_into_recovery = 1;
@@ -439,7 +437,7 @@ void aboot_init(const struct app_descriptor *app)
 	}
 
 	printf("press POWER for FASTBOOT or halfpress CAMERA for RECOVERY modes\n");
-	for (int tmout = 0; tmout < 3500; tmout += 50) 
+	for (int tmout = 0; tmout < 500; tmout += 50) 
 	{
 		int8_t pwr = keys_get_state(KEY_POWER);
 		int8_t cmr = keys_get_state(KEY_UP);
