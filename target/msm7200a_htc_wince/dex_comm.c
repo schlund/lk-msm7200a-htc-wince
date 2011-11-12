@@ -178,6 +178,7 @@ int msm_dex_comm_init()
 	mutex_acquire(&dex_mutex);
 
 	init_dex_locked();
+	wait_dex_ready();
 
 	mutex_release(&dex_mutex);
 	return 0;
