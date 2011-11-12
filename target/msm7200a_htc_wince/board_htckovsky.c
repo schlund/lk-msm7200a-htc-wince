@@ -480,8 +480,11 @@ static void htckovsky_wait_for_charge(void) {
 	uint8_t no_charger_cycles = 0;
 	bool power = false;
 	do {
+		gpio_set(KOVS100_N_CHG_ENABLE, 1);
+		mdelay(10);
 		voltage = ds2746_read_voltage_mv(0x36);
 		current = ds2746_read_current_ma(0x36, 1500);
+		
 		power = htckovsky_usb_online();
 		if (power) {
 			htckovsky_set_charger(CHG_USB_HIGH);
@@ -502,7 +505,7 @@ static void htckovsky_wait_for_charge(void) {
 		mdelay(500);
 		//ok, don't drop charge but instead increase minimum voltage to
 		//compensate for incorrect reading
-	} while ((power && (voltage < 3750)) || (voltage < 3650));
+	} while ((power && (voltage < 3700)) || (!power && (voltage < 3600)));
 	if (get_boot_reason() == BOOT_CHARGING)
 		reboot_device(BOOT_WARM);
 }
