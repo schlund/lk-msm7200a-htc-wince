@@ -174,6 +174,13 @@ static struct ptentry htcphoton_part_list[] = {
 		.perm = PERM_WRITEABLE,
 	},
 	{
+		.start = HTCPHOTON_FLASH_BOOT_START,
+		.length = HTCPHOTON_FLASH_BOOT_SIZE,
+		.name = "boot",
+		.type = TYPE_APPS_PARTITION,
+		.perm = PERM_WRITEABLE,
+	},
+	{
 		.start = HTCPHOTON_FLASH_RECOVERY_START,
 		.length = HTCPHOTON_FLASH_RECOVERY_SIZE,
 		.name = "recovery",
@@ -184,13 +191,6 @@ static struct ptentry htcphoton_part_list[] = {
 		.start = HTCPHOTON_FLASH_MISC_START,
 		.length = HTCPHOTON_FLASH_MISC_SIZE,
 		.name = "misc",
-		.type = TYPE_APPS_PARTITION,
-		.perm = PERM_WRITEABLE,
-	},
-	{
-		.start = HTCPHOTON_FLASH_BOOT_START,
-		.length = HTCPHOTON_FLASH_BOOT_SIZE,
-		.name = "boot",
 		.type = TYPE_APPS_PARTITION,
 		.perm = PERM_WRITEABLE,
 	},
