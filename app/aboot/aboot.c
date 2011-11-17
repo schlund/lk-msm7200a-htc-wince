@@ -191,7 +191,7 @@ int boot_linux_from_flash(void)
 	offset += page_size;
 
 	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
-		dprintf(CRITICAL, "ERROR: Invaled boot image heador\n");
+		dprintf(CRITICAL, "ERROR: Invalid boot image header\n");
 		return -1;
 	}
 
@@ -237,6 +237,54 @@ int boot_linux_from_flash(void)
 
 	return 0;
 }
+
+int boot_linux_from_ram(uint32_t boot, uint32_t rcvr)
+{
+	struct boot_img_hdr *hdr;
+	uint32_t image;
+	void *rd;
+	const char *cmdline;
+
+	if (boot_into_recovery) {
+		image = boot;
+	} else {
+		image = rcvr;
+	}
+
+	hdr = (struct boot_img_hdr*)image;
+
+	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
+		dprintf(CRITICAL, "ERROR: Invalid boot image header\n");
+		return -1;
+	}
+
+	rd = (image + hdr->kernel_size + 2 * hdr->page_size - 1) & ~(hdr->page_size - 1);
+
+	memmove(hdr->kernel_addr, (void*)(image + hdr->page_size), hdr->kernel_size);
+	memmove(hdr->ramdisk_addr, rd, hdr->ramdisk_size);
+
+	dprintf(INFO, "\nkernel  @ %x (%d bytes)\n", hdr->kernel_addr,
+		hdr->kernel_size);
+	dprintf(INFO, "ramdisk @ %x (%d bytes)\n", hdr->ramdisk_addr,
+		hdr->ramdisk_size);
+
+	if (hdr->cmdline[0]) {
+		cmdline = (char *)hdr->cmdline;
+	} else {
+		cmdline = target_get_cmdline();
+	}
+	dprintf(INFO, "cmdline = '%s'\n", cmdline);
+
+	/* TODO: create/pass atags to kernel */
+
+	dprintf(INFO, "\nBooting Linux\n");
+	boot_linux((void *)hdr->kernel_addr, (void *)TAGS_ADDR,
+		   (const char *)cmdline, target_machtype(),
+		   (void *)hdr->ramdisk_addr, hdr->ramdisk_size);
+
+	return 0;
+}
+
 
 void cmd_boot(const char *arg, void *data, unsigned sz)
 {
@@ -393,7 +441,11 @@ static void reboot_bootloader(void) {
 
 static void boot_nand(void) {
 	recovery_init();
+#ifndef BROKEN_NAND_READING
 	boot_linux_from_flash();
+#else
+	boot_linux_from_ram(BOOTIMG_ADDR, RCVRIMG_ADDR);
+#endif
 
 	dprintf(CRITICAL, "ERROR: Could not do normal boot. Reverting "
 		"to fastboot mode.\n");
