@@ -260,6 +260,10 @@ int boot_linux_from_ram(uint32_t boot, uint32_t rcvr)
 
 	rd = (image + hdr->kernel_size + 2 * hdr->page_size - 1) & ~(hdr->page_size - 1);
 
+	//hum...
+	hdr->kernel_addr = KERNEL_ADDR;
+	hdr->ramdisk_addr = RAMDISK_ADDR;
+
 	memmove(hdr->kernel_addr, (void*)(image + hdr->page_size), hdr->kernel_size);
 	memmove(hdr->ramdisk_addr, rd, hdr->ramdisk_size);
 
@@ -442,6 +446,7 @@ static void reboot_bootloader(void) {
 static void boot_nand(void) {
 	recovery_init();
 #ifndef BROKEN_NAND_READING
+	#error not right now
 	boot_linux_from_flash();
 #else
 	boot_linux_from_ram(BOOTIMG_ADDR, RCVRIMG_ADDR);
