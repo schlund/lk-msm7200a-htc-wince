@@ -959,7 +959,7 @@ int flash_read_ext(struct ptentry *ptn, unsigned extra_per_page,
 		}
 
 		result =
-		    _flash_read_page(flash_cmdlist, flash_ptrlist, page, image,
+		    _flash_read_page(flash_cmdlist, flash_ptrlist, page, flash_data,
 				     spare);
 
 		if (result == -1) {
@@ -975,6 +975,7 @@ int flash_read_ext(struct ptentry *ptn, unsigned extra_per_page,
 		}
 
 		page++;
+		memcpy(image, flash_data, flash_pagesize);
 		image += flash_pagesize;
 		memcpy(image, spare, extra_per_page);
 		image += extra_per_page;
