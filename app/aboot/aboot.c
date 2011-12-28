@@ -446,6 +446,7 @@ static void reboot_bootloader(void) {
 static void boot_nand(void) {
 	recovery_init();
 #ifndef BROKEN_NAND_READING
+	#error not right now
 	boot_linux_from_flash();
 #else
 	boot_linux_from_ram(BOOTIMG_ADDR, RCVRIMG_ADDR);
