@@ -195,6 +195,11 @@ int boot_linux_from_flash(void)
 		return -1;
 	}
 
+#ifdef FORCE_BOOT_ADDR
+	hdr->kernel_addr = KERNEL_ADDR;
+	hdr->ramdisk_addr = RAMDISK_ADDR;
+#endif
+
 	if (hdr->page_size != page_size) {
 		dprintf(CRITICAL,
 			"ERROR: Invaled boot image pagesize. Device pagesize: %d, Image pagesize: %d\n",
