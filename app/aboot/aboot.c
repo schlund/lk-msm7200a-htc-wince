@@ -441,7 +441,6 @@ void aboot_init(const struct app_descriptor *app)
 			break;
 	}
 
-	printf("press POWER for FASTBOOT or halfpress CAMERA for RECOVERY modes\n");
 	for (int tmout = 0; tmout < 500; tmout += 50) 
 	{
 		int8_t pwr = keys_get_state(KEY_POWER);
