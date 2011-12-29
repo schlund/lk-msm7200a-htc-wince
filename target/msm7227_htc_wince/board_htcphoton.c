@@ -246,7 +246,7 @@ static void htcphoton_nand_init(void) {
  * GPIO Keys
  ******************************************************************************/
 static unsigned int photon_col_gpios[] = {35, 34, 33};
-static unsigned int photon_row_gpios[] = {52, 41, 40};
+static unsigned int photon_row_gpios[] = {42, 41, 40};
 
 #define KEYMAP_INDEX(row, col) ((row)*ARRAY_SIZE(photon_col_gpios) + (col))
 
