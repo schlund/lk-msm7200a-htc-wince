@@ -281,8 +281,8 @@ static void htcphoton_init(void) {
 	htcphoton_usb_init();
 	htcphoton_nand_init();
 	htcphoton_keypad_init();
-	printf("press VOLUME UP for RECOVERY");
-	printf("press VOLUME DOWN for FASTBOOT");
+	printf("press VOLUME UP for RECOVERY\n");
+	printf("press VOLUME DOWN for FASTBOOT\n");
 }
 
 struct msm7k_board htcphoton_board = {
