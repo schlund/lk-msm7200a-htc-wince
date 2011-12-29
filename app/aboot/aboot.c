@@ -191,7 +191,7 @@ int boot_linux_from_flash(void)
 	offset += page_size;
 
 	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
-		dprintf(CRITICAL, "ERROR: Invaled boot image heador\n");
+		dprintf(CRITICAL, "ERROR: Invalid boot image header\n");
 		return -1;
 	}
 
@@ -202,7 +202,7 @@ int boot_linux_from_flash(void)
 
 	if (hdr->page_size != page_size) {
 		dprintf(CRITICAL,
-			"ERROR: Invaled boot image pagesize. Device pagesize: %d, Image pagesize: %d\n",
+			"ERROR: Invalid boot image pagesize. Device pagesize: %d, Image pagesize: %d\n",
 			page_size, hdr->page_size);
 		return -1;
 	}
