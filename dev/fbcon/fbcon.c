@@ -197,14 +197,6 @@ newline:
 	fbcon_flush();
 }
 
-#if DISPLAY_SPLASH_SCREEN
-static void diplay_image_on_screen(void)
-{
-	fbcon_clear();
-	fbcon_flush();
-}
-#endif
-
 void fbcon_setup(struct fbcon_config *_config)
 {
 	ASSERT(_config);
