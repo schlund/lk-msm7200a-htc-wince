@@ -151,7 +151,7 @@ int msm_dex_comm(struct msm_dex_command * in, unsigned *out)
 				readl(base + DEX_DATA_RESULT));
 		}
 	} else {
-		dprintf(CRITICAL "%s: DEX Code not match! a2m[0x%x], m2a[0x%x], a2m_num[0x%x], m2a_num[0x%x]\n",
+		dprintf(CRITICAL, "%s: DEX Code not match! a2m[0x%x], m2a[0x%x], a2m_num[0x%x], m2a_num[0x%x]\n",
 			__func__, base_cmd, base_status, num, readl(base + DEX_SERIAL_CHECK));
 	}
 
@@ -237,6 +237,6 @@ void dex_reboot(void)
 
 //	__raw__writel(MSM_GPIOCFG2_BASE + 0x504, __raw__readl(MSM_GPIOCFG2_BASE + 0x504) | 0x200);
 	gpio_set(25, 0);
-	dprintf(INFO "%s: Soft reset done.\n", __func__);
+	dprintf(INFO, "%s: Soft reset done.\n", __func__);
 	exit_critical_section();
 }

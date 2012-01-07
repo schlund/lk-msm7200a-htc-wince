@@ -55,9 +55,9 @@ enum debug_level {
 
 #define dputc(level, str) do { if ((level) <= DEBUGLEVEL) { _dputc(str); } } while (0)
 #define dputs(level, str) do { if ((level) <= DEBUGLEVEL) { _dputs(str); } } while (0)
-//#define dprintf(level, x...) do { if ((level) <= DEBUGLEVEL) { dprintf(x); } } while (0)
+#define dprintf(level, x...) do { if ((level) <= DEBUGLEVEL) { printf(x); } } while (0)
 #define dvprintf(level, x...) do { if ((level) <= DEBUGLEVEL) { _dvprintf(x); } } while (0)
-#define dprintf(level, x...) printf(x)
+//#define dprintf(level, x...) printf(x)
 
 /* input */
 	int dgetc(char *c);
