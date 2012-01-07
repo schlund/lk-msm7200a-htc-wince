@@ -518,7 +518,7 @@ static int _flash_nand_read_page(dmov_s * cmdlist, unsigned *ptrlist,
 
 	int result = dmov_exec_cmdptr(DMOV_NAND_CHAN, ptr);
 	if (result != 0) {
-		dprintf(INFO, "read page failed %x (block %x)\n", page,
+		dprintf(CRITICAL, "read page failed %x (block %x)\n", page,
 			page >> 6);
 		return -1;
 	}
@@ -817,15 +817,14 @@ static void flash_read_id(dmov_s * cmdlist, unsigned *ptrlist)
 	}
 	// Assume 8 bit nand device for backward compatability
 	if (dev_found == 0) {
-		dprintf(INFO,
+		dprintf(CRITICAL,
 			"Device not supported.  Assuming 8 bit NAND device\n");
 		flash_info.type = FLASH_8BIT_NAND_DEVICE;
 	}
-	dprintf(INFO, "nandid: 0x%x maker=0x%02x device=0x%02x page_size=%d\n",
-		flash_info.id, flash_info.vendor, flash_info.device,
-		flash_info.page_size);
-	dprintf(INFO, "		spare_size=%d block_size=%d num_blocks=%d\n",
-		flash_info.spare_size, flash_info.block_size,
+	dprintf(ALWAYS, "nand id: 0x%x maker=0x%02x device=0x%02x\n",
+		flash_info.id, flash_info.vendor, flash_info.device);
+	dprintf(INFO, "page_size=%d spare_size=%d block_size=%d num_blocks=%d\n",
+		flash_info.page_size, flash_info.spare_size, flash_info.block_size,
 		flash_info.num_blocks);
 }
 
@@ -983,7 +982,7 @@ int flash_read_ext(struct ptentry *ptn, unsigned extra_per_page,
 	}
 
 	/* could not find enough valid pages before we hit the end */
-	dprintf(INFO, "flash_read_image: failed (%d errors)\n", errors);
+	dprintf(CRITICAL, "flash_read_image: failed (%d errors)\n", errors);
 	return 0xffffffff;
 }
 
@@ -1000,7 +999,7 @@ int flash_write(struct ptentry *ptn, unsigned extra_per_page, const void *data,
 
 	if (ptn->type == TYPE_MODEM_PARTITION) {
 		dprintf(CRITICAL,
-			"flash_write_image: model partition not supported\n");
+			"flash_write_image: modem partition not supported\n");
 		return -1;
 	}
 
