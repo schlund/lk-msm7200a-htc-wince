@@ -253,10 +253,10 @@ void target_init(void)
 	if (board && board->early_init)
 		board->early_init();
 	int ret = msm_dex_comm_init();
-	dprintf(INFO, "DEX init with ret = %d\n", ret);
+	dprintf(VDEBUG, "DEX init with ret = %d\n", ret);
 	acpu_clock_init();
 	ret = msm_i2c_probe(&i2c_pdata);
-	dprintf(INFO, "I2C init with ret = %d\n", ret);
+	dprintf(VDEBUG, "I2C init with ret = %d\n", ret);
 	if (board && board->init)
 		board->init();
 }

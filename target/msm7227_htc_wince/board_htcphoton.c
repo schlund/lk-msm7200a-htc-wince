@@ -111,7 +111,7 @@ static struct udc_device htcphoton_udc_device = {
 static void htcphoton_usb_init(void) {
 	msm_hsusb_init(&htcphoton_hsusb_pdata);
 	int ret = udc_init(&htcphoton_udc_device);
-	dprintf(ALWAYS, "udc_init done with ret=%d\n", ret);
+	dprintf(VDEBUG, "udc_init done with ret=%d\n", ret);
 }
 
 /******************************************************************************

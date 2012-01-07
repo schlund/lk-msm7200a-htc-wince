@@ -134,7 +134,7 @@ static void htcrhodium_mddi_panel_init(struct mddi_client_caps *client_caps)
 		break;
 
 	default:
-		dprintf(ALWAYS, "%s: Unknown panel_id %x detected!\n", __func__, rhod_panel_id);
+		dprintf(CRITICAL, "%s: Unknown panel_id %x detected!\n", __func__, rhod_panel_id);
 		for (i = 0; i < ARRAY_SIZE(nov_init_seq1); i++)	//Default to EID on unknown
 		{
 			reg = nov_init_seq1[i].reg;
@@ -253,7 +253,7 @@ static struct udc_device htcrhodium_udc_device = {
 static void htcrhodium_usb_init(void) {
 	msm_hsusb_init(&htcrhodium_hsusb_pdata);
 	int ret = udc_init(&htcrhodium_udc_device);
-	dprintf(ALWAYS, "udc_init done with ret=%d\n", ret);
+	dprintf(VDEBUG, "udc_init done with ret=%d\n", ret);
 }
 
 /******************************************************************************

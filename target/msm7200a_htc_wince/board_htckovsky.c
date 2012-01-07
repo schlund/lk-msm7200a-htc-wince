@@ -533,7 +533,7 @@ static struct udc_device htckovsky_udc_device = {
 static void htckovsky_usb_init(void) {
 	msm_hsusb_init(&htckovsky_hsusb_pdata);
 	int ret = udc_init(&htckovsky_udc_device);
-	dprintf(ALWAYS, "udc_init done with ret=%d\n", ret);
+	dprintf(VDEBUG, "udc_init done with ret=%d\n", ret);
 }
 
 /******************************************************************************
