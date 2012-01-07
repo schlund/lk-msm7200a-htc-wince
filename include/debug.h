@@ -33,17 +33,19 @@
 extern "C" {
 #endif
 
-#if defined(DEBUG)
-#define DEBUGLEVEL DEBUG
-#else
-#define DEBUGLEVEL 2
-#endif
-
 /* debug levels */
-#define CRITICAL 0
-#define ALWAYS 0
-#define INFO 1
-#define SPEW 2
+enum debug_level {
+	ALWAYS = 0,
+	CRITICAL = 1,
+	INFO = 2,
+	VDEBUG = 3,
+};
+
+#if defined(LK_DEBUG_LEVEL)
+#define DEBUGLEVEL LK_DEBUG_LEVEL
+#else
+#define DEBUGLEVEL INFO
+#endif
 
 /* output */
 	void _dputc(char c);

@@ -471,8 +471,9 @@ static int msm_clk_enable(unsigned id)
 	if (done)
 		return 0;
 
-	printf
-	    ("%s: FIXME! enabling a clock that doesn't have an ena bit or ns-only offset: %u\n",
+	dprintf
+	    (CRITICAL,
+		"%s: FIXME! enabling a clock that doesn't have an ena bit or ns-only offset: %u\n",
 	     __func__, id);
 
 	return 0;
@@ -602,8 +603,8 @@ static void msm_clk_disable(unsigned id)
 	if (done)
 		return;
 
-	printf
-	    ("%s: FIXME! disabling a clock that doesn't have an ena bit: %u\n",
+	dprintf
+	    (CRITICAL,"%s: FIXME! disabling a clock that doesn't have an ena bit: %u\n",
 	     __func__, id);
 	return;
 }
@@ -679,8 +680,8 @@ static int msm_clk_set_freq(unsigned id, unsigned freq)
 		return 0;
 
 	if (!params.offset) {
-		printf
-		    ("%s: FIXME! Don't know how to set clock %u - no known Md/Ns reg\n",
+		dprintf
+		    (CRITICAL, "%s: FIXME! Don't know how to set clock %u - no known Md/Ns reg\n",
 		     __func__, id);
 		return 0;
 	}

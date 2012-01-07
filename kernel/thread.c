@@ -162,7 +162,7 @@ static void thread_cleanup_dpc(void *thread)
 {
 	thread_t *t = (thread_t *) thread;
 
-//      dprintf(SPEW, "thread_cleanup_dpc: thread %p (%s)\n", t, t->name);
+//      dprintf(VERBOSE, "thread_cleanup_dpc: thread %p (%s)\n", t, t->name);
 
 #if THREAD_CHECKS
 	ASSERT(t->state == THREAD_DEATH);
@@ -247,7 +247,7 @@ void thread_resched(void)
 	int next_queue =
 	    HIGHEST_PRIORITY - __builtin_clz(run_queue_bitmap) - (32 -
 								  NUM_PRIORITIES);
-	//dprintf(SPEW, "bitmap 0x%x, next %d\n", run_queue_bitmap, next_queue);
+	//dprintf(VERBOSE, "bitmap 0x%x, next %d\n", run_queue_bitmap, next_queue);
 
 	newthread =
 	    list_remove_head_type(&run_queue[next_queue], thread_t, queue_node);

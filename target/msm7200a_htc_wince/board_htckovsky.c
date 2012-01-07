@@ -664,7 +664,7 @@ static void htckovsky_nand_init(void) {
 	flash_init();
 	flash_info = flash_get_info();
 	if (!flash_info) {
-		printf("%s: error initializing flash");
+		dprintf(CRITICAL, "%s: error initializing flash");
 		return;
 	}
 

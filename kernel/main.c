@@ -80,28 +80,28 @@ void kmain(void)
 	dprintf(INFO, "welcome to lk\n\n");
 
 	// deal with any static constructors
-	dprintf(SPEW, "calling constructors\n");
+	dprintf(VERBOSE, "calling constructors\n");
 	call_constructors();
 
 	// bring up the kernel heap
-	dprintf(SPEW, "initializing heap\n");
+	dprintf(VERBOSE, "initializing heap\n");
 	heap_init();
 
 	// initialize the threading system
-	dprintf(SPEW, "initializing threads\n");
+	dprintf(VERBOSE, "initializing threads\n");
 	thread_init();
 
 	// initialize the dpc system
-	dprintf(SPEW, "initializing dpc\n");
+	dprintf(VERBOSE, "initializing dpc\n");
 	dpc_init();
 
 	// initialize kernel timers
-	dprintf(SPEW, "initializing timers\n");
+	dprintf(VERBOSE, "initializing timers\n");
 	timer_init();
 
 #if (!ENABLE_NANDWRITE)
 	// create a thread to complete system initialization
-	dprintf(SPEW, "creating bootstrap completion thread\n");
+	dprintf(VERBOSE, "creating bootstrap completion thread\n");
 
 	// enable interrupts
 	exit_critical_section();
@@ -121,19 +121,19 @@ int main(void);
 
 static int bootstrap2(void *arg)
 {
-	dprintf(SPEW, "top of bootstrap2()\n");
+	dprintf(VERBOSE, "top of bootstrap2()\n");
 
 	arch_init();
 
 	// initialize the rest of the platform
-	dprintf(SPEW, "initializing platform\n");
+	dprintf(VERBOSE, "initializing platform\n");
 	platform_init();
 
 	// initialize the target
-	dprintf(SPEW, "initializing target\n");
+	dprintf(VERBOSE, "initializing target\n");
 	target_init();
 
-	dprintf(SPEW, "calling apps_init()\n");
+	dprintf(VERBOSE, "calling apps_init()\n");
 	apps_init();
 
 	return 0;
@@ -142,19 +142,19 @@ static int bootstrap2(void *arg)
 #if (ENABLE_NANDWRITE)
 void bootstrap_nandwrite(void)
 {
-	dprintf(SPEW, "top of bootstrap2()\n");
+	dprintf(VERBOSE, "top of bootstrap2()\n");
 
 	arch_init();
 
 	// initialize the rest of the platform
-	dprintf(SPEW, "initializing platform\n");
+	dprintf(VERBOSE, "initializing platform\n");
 	platform_init();
 
 	// initialize the target
-	dprintf(SPEW, "initializing target\n");
+	dprintf(VERBOSE, "initializing target\n");
 	target_init();
 
-	dprintf(SPEW, "calling nandwrite_init()\n");
+	dprintf(VERBOSE, "calling nandwrite_init()\n");
 	nandwrite_init();
 
 	return 0;

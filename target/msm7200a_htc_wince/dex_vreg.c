@@ -36,7 +36,7 @@ static struct vreg vregs[32] = {
 int dex_vreg_enable(unsigned id)
 {
 	if (id > ARRAY_SIZE(vregs)) {
-		printf("[VREG] %s: incorrect index %u\n", __func__, id);
+		dprintf(CRITICAL, "[VREG] %s: incorrect index %u\n", __func__, id);
 		return ERR_INVALID_ARGS;
 	}
 	struct vreg* vreg = vregs + id;
@@ -59,7 +59,7 @@ int dex_vreg_enable(unsigned id)
 int dex_vreg_disable(unsigned id)
 {
 	if (id > ARRAY_SIZE(vregs)) {
-		printf("[VREG] %s: incorrect index %u\n", __func__, id);
+		dprintf(CRITICAL, "[VREG] %s: incorrect index %u\n", __func__, id);
 		return ERR_INVALID_ARGS;
 	}
 
@@ -86,7 +86,7 @@ int dex_vreg_disable(unsigned id)
 int dex_vreg_set_level(unsigned id, unsigned mv)
 {
 	if (id > ARRAY_SIZE(vregs)) {
-		printf("[VREG] %s: incorrect index %u\n", __func__, id);
+		dprintf(CRITICAL, "[VREG] %s: incorrect index %u\n", __func__, id);
 		return ERR_INVALID_ARGS;
 	}
 	struct vreg* vreg = vregs + id;

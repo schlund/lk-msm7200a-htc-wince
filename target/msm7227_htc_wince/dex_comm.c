@@ -25,12 +25,12 @@
 #include <target/dex_comm.h>
 
 #if defined(DEX_DEBUG) && DEX_DEBUG
-	#define DDEX(fmt, arg...) dprintf(INFO, "[DEX] %s: " fmt "\n", __FUNCTION__, ## arg)
+	#define DDEX(fmt, arg...) dprintf(ALWAYS, "[DEX] %s: " fmt "\n", __FUNCTION__, ## arg)
 #else
 	#define DDEX(fmt, arg...) do {} while (0)
 #endif
 
-#define EDEX(fmt, arg...) dprintf(ERROR, "[DEX] %s: " fmt "\n", __FUNCTION__, ## arg)
+#define EDEX(fmt, arg...) dprintf(CRITICAL, "[DEX] %s: " fmt "\n", __FUNCTION__, ## arg)
 
 #define MSM_A2M_INT(n)	(MSM_CSR_BASE + 0x400 + (n) * 4)
 #define DEX_COMMAND		0x00
@@ -151,7 +151,7 @@ int msm_dex_comm(struct msm_dex_command * in, unsigned *out)
 				readl(base + DEX_DATA_RESULT));
 		}
 	} else {
-		dprintf(WARNING "%s: DEX Code not match! a2m[0x%x], m2a[0x%x], a2m_num[0x%x], m2a_num[0x%x]\n",
+		dprintf(CRITICAL "%s: DEX Code not match! a2m[0x%x], m2a[0x%x], a2m_num[0x%x], m2a_num[0x%x]\n",
 			__func__, base_cmd, base_status, num, readl(base + DEX_SERIAL_CHECK));
 	}
 

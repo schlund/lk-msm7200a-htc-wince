@@ -79,7 +79,7 @@ int msm_proc_comm(unsigned cmd, unsigned *data1, unsigned *data2)
 		ret = 0;
 	}
 	else {
-		dprintf(INFO, "[PCOM]: FAIL [%x %x %x]\n", cmd, data1, data2);
+		dprintf(CRITICAL, "[PCOM]: FAIL [%x %x %x]\n", cmd, data1, data2);
 	}
 
 	return ret;

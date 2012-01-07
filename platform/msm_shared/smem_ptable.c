@@ -65,7 +65,7 @@ static void dump_smem_ptable(void)
 		struct smem_ptn *p = &smem_ptable.parts[i];
 		if (p->name[0] == '\0')
 			continue;
-		dprintf(SPEW, "%d: %s offs=0x%08x size=0x%08x attr: 0x%08x\n",
+		dprintf(VDEBUG, "%d: %s offs=0x%08x size=0x%08x attr: 0x%08x\n",
 			i, p->name, p->start, p->size, p->attr);
 	}
 }

@@ -58,7 +58,7 @@ static struct fbcon_config fb_cfg = {
 static void printcaps(struct mddi_client_caps *c)
 {
 	if ((c->length != 0x4a) || (c->type != 0x42)) {
-		dprintf(INFO, "bad caps header\n");
+		dprintf(CRITICAL, "bad caps header\n");
 		memset(c, 0, sizeof(*c));
 		return;
 	}

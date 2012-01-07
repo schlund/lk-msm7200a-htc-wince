@@ -42,7 +42,7 @@ static enum handler_return gpio_key_irq(void *arg)
 }
 
 void gpio_keys_init(struct gpio_keys_pdata *pdata) {
-	dprintf(INFO, "+%s\n", __func__);
+	dprintf(VDEBUG, "+%s\n", __func__);
 	if (!pdata) {
 		dprintf(CRITICAL, "%s: pdata is NULL\n", __func__);
 	}
@@ -57,6 +57,6 @@ void gpio_keys_init(struct gpio_keys_pdata *pdata) {
 		register_gpio_int_handler(gpio, gpio_key_irq, &pdata->keys[i]);
 		unmask_gpio_interrupt(gpio, GPIO_IRQF_BOTH);
 	}
-	dprintf(INFO, "-%s\n", __func__);
+	dprintf(VDEBUG, "-%s\n", __func__);
 }
 

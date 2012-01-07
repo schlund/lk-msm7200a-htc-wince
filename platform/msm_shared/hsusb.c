@@ -111,11 +111,7 @@ unsigned udc_string_desc_alloc(const char *str)
 
 /* end of common code */
 
-#if 1
-#define DBG(x...) do {} while(0)
-#else
-#define DBG(x...) dprintf(INFO, x)
-#endif
+#define DBG(x...) dprintf(VDEBUG, x)
 
 #define usb_status(a,b)
 
@@ -388,7 +384,7 @@ static void handle_ept_complete(struct udc_endpoint *ept)
 		if (item->info & 0xff) {
 			actual = 0;
 			status = -1;
-			dprintf(INFO, "EP%d/%s FAIL nfo=%x pg0=%x\n",
+			dprintf(VDEBUG, "EP%d/%s FAIL nfo=%x pg0=%x\n",
 				ept->num, ept->in ? "in" : "out", item->info,
 				item->page0);
 		} else {
@@ -559,7 +555,7 @@ static void handle_setup(struct udc_endpoint *ept)
 		}
 	}
 
-	dprintf(INFO, "STALL %s %d %d %d %d %d\n",
+	dprintf(VDEBUG, "STALL %s %d %d %d %d %d\n",
 		reqname(s.request),
 		s.type, s.request, s.value, s.index, s.length);
 
@@ -578,7 +574,7 @@ unsigned ulpi_read(unsigned reg)
 	while ((readl(USB_ULPI_VIEWPORT) & ULPI_RUN) && (--timeout));
 	
 	if (!timeout) {
-		printf("%s: timeout reading from %x\n", __func__, reg);
+		dprintf(CRITICAL, "%s: timeout reading from %x\n", __func__, reg);
 		return -1UL;
 	}
 
@@ -596,7 +592,7 @@ void ulpi_write(unsigned val, unsigned reg)
 	while ((readl(USB_ULPI_VIEWPORT) & ULPI_RUN) && (--timeout));
 
 	if (!timeout) {
-		printf("%s: timeout writing %x to %x\n", __func__, val, reg);
+		dprintf(CRITICAL, "%s: timeout writing %x to %x\n", __func__, val, reg);
 	}
 }
 
@@ -737,7 +733,7 @@ enum handler_return udc_interrupt(void *arg)
 		}
 	}
 	if (n & STS_UEI) {
-		dprintf(INFO, "<UEI %x>\n", readl(USB_ENDPTCOMPLETE));
+		dprintf(VDEBUG, "<UEI %x>\n", readl(USB_ENDPTCOMPLETE));
 	}
 	DBG("STS: ");
 	if (n & STS_UEI)

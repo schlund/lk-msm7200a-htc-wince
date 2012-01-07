@@ -117,7 +117,7 @@ enum handler_return platform_irq(struct arm_iframe *frame)
 	if (handler[num].func)
 		ret = handler[num].func(handler[num].arg);
 	else
-		printf("[IRQ]: no handler for irq=%d\n", num);
+		dprintf(VDEBUG, "[IRQ]: no handler for irq=%d\n", num);
 	writel(0, VIC_IRQ_VEC_WR);
 
 	switch(num) {
@@ -130,7 +130,7 @@ enum handler_return platform_irq(struct arm_iframe *frame)
 		break;
 
 		default:
-			printf("[IRQ]: num=%d\n", num);
+			dprintf(VDEBUG, "[IRQ]: num=%d\n", num);
 	}
 	return ret;
 }

@@ -236,14 +236,14 @@ void msm_gpio_config(unsigned config, unsigned disable)
 		writel(gpio, MSM_GPIOCFG1_BASE + 0x20);
 		writel(cfg, MSM_GPIOCFG1_BASE + 0x24);
 		if (readl(MSM_GPIOCFG1_BASE + 0x20) != gpio) {
-			dprintf(INFO, "[GPIO]: could not set alt func %u => %u\n",
+			dprintf(CRITICAL, "[GPIO]: could not set alt func %u => %u\n",
 			 gpio, MSM_GPIO_FUNC(config));
 		}
 	} else {
 		writel(gpio, MSM_GPIOCFG2_BASE + 0x410);
 		writel(cfg, MSM_GPIOCFG2_BASE + 0x414);
 		if (readl(MSM_GPIOCFG2_BASE + 0x410) != gpio) {
-			dprintf(INFO, "[GPIO]: could not set alt func %u => %u\n",
+			dprintf(CRITICAL, "[GPIO]: could not set alt func %u => %u\n",
 			 gpio, MSM_GPIO_FUNC(config));
 		}
 	}

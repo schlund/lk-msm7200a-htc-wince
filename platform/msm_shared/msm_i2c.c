@@ -99,26 +99,26 @@ static struct msm_i2c_dev {
 static void
 dump_status(uint32_t status)
 {
-	I2C_DBG(INFO, "STATUS (0x%.8x): ", status);
+	I2C_DBG(VDEBUG, "STATUS (0x%.8x): ", status);
 	if (status & I2C_STATUS_BUS_MASTER)
-		I2C_DBG(INFO, "MST ");
+		I2C_DBG(VDEBUG, "MST ");
 	if (status & I2C_STATUS_BUS_ACTIVE)
-		I2C_DBG(INFO, "ACT ");
+		I2C_DBG(VDEBUG, "ACT ");
 	if (status & I2C_STATUS_INVALID_WRITE)
-		I2C_DBG(INFO, "INV_WR ");
+		I2C_DBG(VDEBUG, "INV_WR ");
 	if (status & I2C_STATUS_ARB_LOST)
-		I2C_DBG(INFO, "ARB_LST ");
+		I2C_DBG(VDEBUG, "ARB_LST ");
 	if (status & I2C_STATUS_PACKET_NACKED)
-		I2C_DBG(INFO, "NAK ");
+		I2C_DBG(VDEBUG, "NAK ");
 	if (status & I2C_STATUS_BUS_ERROR)
-		I2C_DBG(INFO, "BUS_ERR ");
+		I2C_DBG(VDEBUG, "BUS_ERR ");
 	if (status & I2C_STATUS_RD_BUFFER_FULL)
-		I2C_DBG(INFO, "RD_FULL ");
+		I2C_DBG(VDEBUG, "RD_FULL ");
 	if (status & I2C_STATUS_WR_BUFFER_FULL)
-		I2C_DBG(INFO, "WR_FULL ");
+		I2C_DBG(VDEBUG, "WR_FULL ");
 	if (status & I2C_STATUS_FAILED)
-		I2C_DBG(INFO, "FAIL 0x%x", (status & I2C_STATUS_FAILED));
-	I2C_DBG(INFO, "\n");
+		I2C_DBG(VDEBUG, "FAIL 0x%x", (status & I2C_STATUS_FAILED));
+	I2C_DBG(VDEBUG, "\n");
 }
 #else
 static inline void dump_status(uint32_t status) {}
@@ -215,7 +215,7 @@ static void msm_i2c_interrupt_locked(void)
 	bool not_done = true;
 
 	if (!dev.msg) {
-		I2C_DBG(WARNING,
+		I2C_DBG(INFO,
 			"IRQ but nothing to do!, status %x\n", status);
 		dump_status(status);
 		return;
@@ -254,14 +254,14 @@ static enum handler_return msm_i2c_isr(void *arg) {
 static int
 msm_i2c_poll_notbusy(int warn)
 {
-	I2C_DBG(INFO, "%s\n", __func__);
+	I2C_DBG(VDEBUG, "%s\n", __func__);
 	uint32_t retries = 0;
 	while (retries != 200) {
 		uint32_t status = readl(dev.pdata->i2c_base + I2C_STATUS);
 
 		if (!(status & I2C_STATUS_BUS_ACTIVE)) {
 			if (retries && warn)
-				I2C_DBG(WARNING,
+				I2C_DBG(INFO,
 					"Warning bus was busy (%d)\n", retries);
 			return 0;
 		}
@@ -275,7 +275,7 @@ msm_i2c_poll_notbusy(int warn)
 static int
 msm_i2c_recover_bus_busy(void)
 {
-	I2C_DBG(INFO, "%s\n", __func__);
+	I2C_DBG(VDEBUG, "%s\n", __func__);
 	int i;
 	bool gpio_clk_status = false;
 	uint32_t status = readl(dev.pdata->i2c_base + I2C_STATUS);
@@ -288,19 +288,19 @@ msm_i2c_recover_bus_busy(void)
 		dev.pdata->set_mux_to_i2c(0);
 
 	if (status & I2C_STATUS_RD_BUFFER_FULL) {
-		I2C_DBG(WARNING, "Read buffer full, status %x, intf %x\n",
+		I2C_DBG(INFO, "Read buffer full, status %x, intf %x\n",
 			 status, readl(dev.pdata->i2c_base + I2C_INTERFACE_SELECT));
 		writel(I2C_WRITE_DATA_LAST_BYTE, dev.pdata->i2c_base + I2C_WRITE_DATA);
 		readl(dev.pdata->i2c_base + I2C_READ_DATA);
 	}
 	else if (status & I2C_STATUS_BUS_MASTER) {
-		I2C_DBG(WARNING, "Still the bus master, status %x, intf %x\n",
+		I2C_DBG(INFO, "Still the bus master, status %x, intf %x\n",
 			 status, readl(dev.pdata->i2c_base + I2C_INTERFACE_SELECT));
 		writel(I2C_WRITE_DATA_LAST_BYTE | 0xff,
 		 dev.pdata->i2c_base + I2C_WRITE_DATA);
 	}
 
-	I2C_DBG(WARNING, "i2c_scl: %d, i2c_sda: %d\n",
+	I2C_DBG(INFO, "i2c_scl: %d, i2c_sda: %d\n",
 		 gpio_get(dev.pdata->scl_gpio), gpio_get(dev.pdata->sda_gpio));
 
 	for (i = 0; i < 9; i++) {
@@ -327,13 +327,13 @@ msm_i2c_recover_bus_busy(void)
 
 	status = readl(dev.pdata->i2c_base + I2C_STATUS);
 	if (!(status & I2C_STATUS_BUS_ACTIVE)) {
-		I2C_DBG(INFO, "Bus busy cleared after %d clock cycles, "
+		I2C_DBG(VDEBUG, "Bus busy cleared after %d clock cycles, "
 			 "status %x, intf %x\n",
 			 i, status, readl(dev.pdata->i2c_base + I2C_INTERFACE_SELECT));
 		return 0;
 	}
 
-	I2C_DBG(WARNING, "Bus still busy, status %x, intf %x\n",
+	I2C_DBG(INFO, "Bus still busy, status %x, intf %x\n",
 		 status, readl(dev.pdata->i2c_base + I2C_INTERFACE_SELECT));
 	return ERR_NOT_READY;
 }
@@ -362,7 +362,7 @@ msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	I2C_DBG_FUNC_LINE();
 
 	if (dev.flush_cnt) {
-		I2C_DBG(WARNING, "%d unrequested bytes read\n",
+		I2C_DBG(INFO, "%d unrequested bytes read\n",
 			 dev.flush_cnt);
 	}
 	dev.msg = msgs;
@@ -388,7 +388,7 @@ msm_i2c_xfer(struct i2c_msg msgs[], int num)
 		I2C_DBG_FUNC_LINE();
 
 	if (dev.flush_cnt) {
-		I2C_DBG(WARNING, "%d unrequested bytes read\n",
+		I2C_DBG(INFO, "%d unrequested bytes read\n",
 			 dev.flush_cnt);
 	}
 	ret = dev.ret;
@@ -401,7 +401,7 @@ msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	exit_critical_section();
 
 	if (timeout == ERR_TIMED_OUT) {
-		I2C_DBG(WARNING, "Transaction timed out\n");
+		I2C_DBG(INFO, "Transaction timed out\n");
 		ret = ERR_TIMED_OUT;
 	}
 
@@ -433,7 +433,7 @@ int msm_i2c_write(int chip, void *buf, size_t count) {
 		 .buf = buf,
 		 },
 	};
-	I2C_DBG(INFO, "+%s\n", __func__);
+	I2C_DBG(VDEBUG, "+%s\n", __func__);
 	for (retry = 0; retry <= MSM_I2C_WRITE_RETRY_TIMES; retry++) {
 		rc = msm_i2c_xfer(msg, 1);
 		if (rc == 1) {
@@ -441,13 +441,13 @@ int msm_i2c_write(int chip, void *buf, size_t count) {
 			goto ret;
 		}
 		mdelay(10);
-		I2C_DBG(WARNING, "%s, i2c write retry\n", __func__);
+		I2C_DBG(INFO, "%s, i2c write retry\n", __func__);
 	}
-	I2C_DBG(WARNING, "micropklt_write, i2c_write_block retry over %d\n",
+	I2C_DBG(INFO, "micropklt_write, i2c_write_block retry over %d\n",
 	       MSM_I2C_WRITE_RETRY_TIMES);
 
 ret:
-	I2C_DBG(INFO, "-%s\n", __func__);
+	I2C_DBG(VDEBUG, "-%s\n", __func__);
 	return rc;
 }
 
@@ -481,9 +481,9 @@ int msm_i2c_read(int chip, uint8_t reg, void *buf, size_t count) {
 			return 0;
 		}
 		mdelay(10);
-		I2C_DBG(WARNING, "%s, i2c read retry\n", __func__);
+		I2C_DBG(INFO, "%s, i2c read retry\n", __func__);
 	}
-	I2C_DBG(WARNING, "i2c_read_block retry over %d\n",
+	I2C_DBG(INFO, "i2c_read_block retry over %d\n",
 		MSM_I2C_READ_RETRY_TIMES);
 	return ERR_NOT_READY;
 }
@@ -517,7 +517,7 @@ int msm_i2c_probe(struct msm_i2c_pdata* pdata)
 	int hs_div = 3;
 	int clk_ctl = ((hs_div & 0x7) << 8) | (fs_div & 0xff);
 	writel(clk_ctl, pdata->i2c_base + I2C_CLK_CTL);
-	I2C_DBG(INFO, "msm_i2c_probe: clk_ctl %x, %d Hz\n",
+	I2C_DBG(VDEBUG, "msm_i2c_probe: clk_ctl %x, %d Hz\n",
 	 clk_ctl, i2c_clk / (2 * ((clk_ctl & 0xff) + 3)));
 	clk_disable(pdata->clk_nr);
 
@@ -531,12 +531,12 @@ int msm_i2c_probe(struct msm_i2c_pdata* pdata)
 void msm_i2c_remove() {
 	if (!dev.pdata)
 		return;
-	I2C_DBG(INFO, "+%s\n", __func__);
+	I2C_DBG(VDEBUG, "+%s\n", __func__);
 	enter_critical_section();
 	mask_interrupt(dev.pdata->irq_nr);
 	clk_disable(dev.pdata->clk_nr);
 	dev.pdata->set_mux_to_i2c(0);
 	dev.pdata = NULL;
 	exit_critical_section();
-	I2C_DBG(INFO, "-%s\n", __func__);
+	I2C_DBG(VDEBUG, "-%s\n", __func__);
 }
