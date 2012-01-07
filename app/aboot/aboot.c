@@ -134,7 +134,7 @@ void boot_linux(void *kernel, unsigned *tags,
 	*ptr++ = 0;
 	*ptr++ = 0;
 
-	dprintf(INFO, "booting linux @ %p, ramdisk @ %p (%d)\n",
+	dprintf(ALWAYS, "booting linux @ %p, ramdisk @ %p (%d)\n",
 		kernel, ramdisk, ramdisk_size);
 	if (cmd)
 		dprintf(INFO, "cmdline: %s\n", cmd);
@@ -458,7 +458,7 @@ void aboot_init(const struct app_descriptor *app)
 		}
 		thread_sleep(50);
 	}
-	printf("no user choise, defaulting to nand boot\n");
+	dprintf(INFO, "no user choice, defaulting to nand boot\n");
 	boot_nand();
 }
 
